@@ -32,8 +32,6 @@ print(f"Using device: {device}")
 # Flash Attention 3 is NVIDIA only, using PyTorch's scaled_dot_product_attention for universality
 def flash_attn_func(q, k, v, causal=True, window_size=(-1, -1)):
     # PyTorch's SDPA handles various backends (FlashAttention, MemoryEfficient, etc.)
-    # Note: SDPA might not support window_size directly in all versions, 
-    # for simplicity we ignore it here or fallback to a custom mask if needed.
     return F.scaled_dot_product_attention(q, k, v, is_causal=causal)
 
 from prepare import MAX_SEQ_LEN, TIME_BUDGET, Tokenizer, make_dataloader, evaluate_bpb
@@ -97,7 +95,8 @@ class CausalSelfAttention(nn.Module):
         if ve is not None:
             ve = ve.view(B, T, self.n_kv_head, self.head_dim).transpose(1, 2)
             gate = 2 * torch.sigmoid(self.ve_gate(x[..., :self.ve_gate_channels]))
-            v = v + gate.view(B, self.n_kv_head, 1, 1) * ve
+            # gate is (B, T, n_kv_head), transpose to (B, n_kv_head, T) and unsqueeze to (B, n_kv_head, T, 1)
+            v = v + gate.transpose(1, 2).unsqueeze(-1) * ve
 
         cos, sin = cos_sin
         q, k = apply_rotary_emb(q, cos, sin), apply_rotary_emb(k, cos, sin)
@@ -467,6 +466,7 @@ FINAL_LR_FRAC = 0.0     # final LR as fraction of initial
 # Model size
 DEPTH = 4               # Lowered for non-H100 (default was 8)
 DEVICE_BATCH_SIZE = 16  # Lowered for non-H100 (default was 128)
+COMPILE = False         # Disabled by default on Windows to avoid 'cl.exe' headache
 
 # ---------------------------------------------------------------------------
 # Setup: tokenizer, model, optimizer, dataloader
@@ -482,7 +482,6 @@ torch.set_float32_matmul_precision("high")
 if device_type == "cuda":
     autocast_ctx = torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16)
 elif device_type == "mps":
-    # MPS autocast support is limited in some torch versions, use float16 if needed
     autocast_ctx = torch.amp.autocast(device_type="cpu", enabled=False) 
 else:
     autocast_ctx = torch.amp.autocast(device_type="cpu", enabled=False)
@@ -532,12 +531,12 @@ optimizer = model.setup_optimizer(
     weight_decay=WEIGHT_DECAY,
 )
 
-# torch.compile might fail on some devices/OS, wrapping in try-except
-try:
-    model = torch.compile(model, dynamic=False)
-    print("torch.compile enabled.")
-except Exception as e:
-    print(f"torch.compile failed, falling back to eager mode. Error: {e}")
+if COMPILE:
+    try:
+        model = torch.compile(model, dynamic=False)
+        print("torch.compile enabled.")
+    except Exception as e:
+        print(f"torch.compile failed, falling back to eager mode. Error: {e}")
 
 train_loader = make_dataloader(tokenizer, DEVICE_BATCH_SIZE, MAX_SEQ_LEN, "train", device=device)
 x, y, epoch = next(train_loader)  # prefetch first batch
