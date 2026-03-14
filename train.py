@@ -463,7 +463,7 @@ FINAL_LR_FRAC = 0.0     # final LR as fraction of initial
 
 # Model size
 DEPTH = 2               # Drastically lowered for CPU
-DEVICE_BATCH_SIZE = 4   # Drastically lowered for CPU
+DEVICE_BATCH_SIZE = 8  # Drastically lowered for CPU
 COMPILE = False         # Disabled by default on Windows to avoid 'cl.exe' headache
 
 # ---------------------------------------------------------------------------

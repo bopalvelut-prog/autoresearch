@@ -1,0 +1,45 @@
+============================================================
+AUTONOMOUS OVERNIGHT EXPERIMENT LOOP
+Best current val_bpb: 2.251074
+============================================================
+Will run up to 100 experiments...
+Press Ctrl+C to stop
+
+
+--- Experiment 1/100 ---
+Testing DEVICE_BATCH_SIZE: 4 -> 8
+Running training...
+val_bpb: 2.309641 (best: 2.251074, diff: -0.058567)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.251074
+
+--- Experiment 2/100 ---
+Testing MATRIX_LR: 0.04 -> 0.03
+Running training...
+val_bpb: 2.288926 (best: 2.251074, diff: -0.037852)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.251074
+
+--- Experiment 3/100 ---
+Testing WARMUP_RATIO: 0.0 -> 0.05
+Running training...
+val_bpb: 2.272164 (best: 2.251074, diff: -0.021090)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.251074
+
+--- Experiment 4/100 ---
+Testing EMBEDDING_LR: 0.6 -> 0.4
+Running training...
+val_bpb: 2.253750 (best: 2.251074, diff: -0.002676)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.251074
+
+--- Experiment 5/100 ---
+Testing DEVICE_BATCH_SIZE: 4 -> 8
+Running training...
+val_bpb: 2.250013 (best: 2.251074, diff: 0.001061)
+IMPROVED! Committing...
