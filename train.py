@@ -536,7 +536,7 @@ if COMPILE:
     except Exception as e:
         print(f"torch.compile failed, falling back to eager mode. Error: {e}")
 
-train_loader = make_dataloader(tokenizer, DEVICE_BATCH_SIZE, MAX_SEQ_LEN, "train", device=device)
+train_loader = make_dataloader(tokenizer, DEVICE_BATCH_SIZE, MAX_SEQ_LEN, "train", device=device, buffer_size=100)
 x, y, epoch = next(train_loader)  # prefetch first batch
 
 print(f"Time budget: {TIME_BUDGET}s")
