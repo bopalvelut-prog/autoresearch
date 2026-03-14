@@ -40,7 +40,8 @@ def chat(prompt):
     try:
         result = subprocess.run(
             ['ollama', 'run', MODEL, full_prompt],
-            capture_output=True, text=True, timeout=300
+            capture_output=True, text=True, timeout=300,
+            errors='replace'
         )
         # Immediately tell ollama we are done for now
         unload_model()
@@ -51,7 +52,7 @@ def chat(prompt):
 def run_command(cmd, timeout=600):
     """Run training with low priority inherited."""
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout, errors='replace')
         return result.stdout + result.stderr
     except:
         return "ERROR"
