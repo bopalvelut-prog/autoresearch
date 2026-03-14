@@ -447,7 +447,7 @@ class MuonAdamW(torch.optim.Optimizer):
 # Model architecture
 ASPECT_RATIO = 16       # Drastically lowered for CPU
 HEAD_DIM = 32           # Drastically lowered for CPU
-WINDOW_PATTERN = "SSSL" # sliding window pattern: L=full, S=half context
+WINDOW_PATTERN = "L"  # sliding window pattern: L=full, S=half context
 
 # Optimization
 TOTAL_BATCH_SIZE = 2**13 # 8192 tokens (Drastically lowered for CPU)
