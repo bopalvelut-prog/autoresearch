@@ -71,3 +71,20 @@ Testing EMBEDDING_LR: 0.6 -> 0.4
 Running training...
 val_bpb: 2.245303 (best: 2.250013, diff: 0.004710)
 IMPROVED! Committing...
+[autoresearch/mar14 aa44bbc] exp 8: EMBEDDING_LR=0.4
+ 2 files changed, 29 insertions(+), 1 deletion(-)
+Current best: 2.245303
+
+--- Experiment 9/100 ---
+Testing WEIGHT_DECAY: 0.2 -> 0.25
+Running training...
+val_bpb: 2.245362 (best: 2.245303, diff: -0.000059)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.245303
+
+--- Experiment 10/100 ---
+Testing WARMDOWN_RATIO: 0.5 -> 0.4
+Running training...
+val_bpb: 2.239687 (best: 2.245303, diff: 0.005616)
+IMPROVED! Committing...
