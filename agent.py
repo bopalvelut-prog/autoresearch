@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AutoResearch "Folding Edition" - Idle Background Researcher
-Optimized to run in the background with low priority.
+Optimized to run in the background with low priority and robust Git-based reverts.
 """
 
 import os
@@ -10,7 +10,7 @@ import time
 import subprocess
 import re
 import json
-import psutil # We use this to set low priority
+import psutil
 
 MODEL = "qwen2.5:0.5b"
 RESULTS_FILE = "results.tsv"
@@ -18,7 +18,6 @@ TRAIN_FILE = "train.py"
 LOG_FILE = "run.log"
 
 # SET PROCESS PRIORITY TO IDLE/BELOW NORMAL
-# This ensures the computer stays smooth for the user while training.
 p = psutil.Process(os.getpid())
 if os.name == 'nt':
     p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
@@ -47,9 +46,10 @@ def run_command(cmd, timeout=600):
 
 def get_git_hash():
     try:
-        return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], text=True).strip()
+        return subprocess.check_output(["git", rev_parse, "--short", "HEAD"], text=True).strip()
     except:
-        return "unknown"
+        # Fallback if rev-parse fails
+        return "latest"
 
 def parse_results(output):
     results = {}
@@ -65,8 +65,11 @@ def log_result(commit, bpb, status, desc):
         f.write(f"{commit}\t{bpb:.6f}\t{status}\t{desc}\n")
 
 def main():
-    print("=== AutoResearch: FOLDING EDITION (Always-On Background Mode) ===")
-    print("Priority set to BELOW NORMAL. Your computer will stay responsive.")
+    print("=== AutoResearch: FOLDING EDITION (Universal) ===")
+    print("Priority set to BELOW NORMAL. Computer stays responsive.")
+    
+    # Ensure we start clean
+    subprocess.run("git restore train.py", shell=True)
     
     best_bpb = 999.0
     if os.path.exists(RESULTS_FILE):
@@ -80,15 +83,18 @@ def main():
                     except: continue
 
     if best_bpb == 999.0: best_bpb = 2.15525
-    print(f"Current best: {best_bpb}. Starting infinite research loop...")
+    print(f"Current best: {best_bpb}. Starting research loop...")
 
     while True:
         try:
-            with open(TRAIN_FILE, "r", encoding="utf-8") as f:
-                current_code = f.read()
-            
-            prompt = f"Best BPB: {best_bpb}. Suggest ONE change for MATRIX_LR, EMBEDDING_LR, SCALAR_LR, or WEIGHT_DECAY. Output ONLY JSON. Example: {{\"MATRIX_LR\": 0.041}}"
-            
+            # 1. Suggest change
+            prompt = f"""
+I am optimizing train.py. Best val_bpb: {best_bpb}.
+Suggest ONE hyperparameter change. 
+Pick ONE from: MATRIX_LR, EMBEDDING_LR, SCALAR_LR, WEIGHT_DECAY.
+Do NOT repeat current values.
+Output ONLY JSON. Example: {{"MATRIX_LR": 0.041}}
+"""
             ai_response = chat(prompt)
             match = re.search(r"\{.*\}", ai_response.replace("\n", ""))
             if not match: 
@@ -96,45 +102,53 @@ def main():
                 continue
             
             changes = json.loads(match.group())
-            new_code = current_code
+            
+            # 2. Apply change
+            with open(TRAIN_FILE, "r", encoding="utf-8") as f:
+                code = f.read()
+            
             desc = ""
+            new_code = code
             for var, val in changes.items():
-                if var in current_code:
+                if var in code:
                     new_code = re.sub(fr"({var}\s*=\s*)[\d\.\*e\-]+", fr"\g<1>{val}", new_code)
                     desc += f"{var}={val} "
             
-            if new_code == current_code:
+            if new_code == code:
                 time.sleep(5)
                 continue
 
             with open(TRAIN_FILE, "w", encoding="utf-8") as f:
                 f.write(new_code)
             
+            # 3. Run training
             print(f"[{time.strftime('%H:%M:%S')}] Testing: {desc}")
             output = run_command("uv run train.py")
             results = parse_results(output)
             
+            # 4. Evaluate and Revert if needed using GIT
             if "val_bpb" in results:
                 new_bpb = results["val_bpb"]
                 if new_bpb < best_bpb:
-                    print(f"!!! IMPROVEMENT: {new_bpb}")
+                    print(f"!!! SUCCESS: {new_bpb}")
                     best_bpb = new_bpb
                     subprocess.run(f'git commit -am "Improve to {new_bpb} via {desc}"', shell=True)
-                    log_result(get_git_hash(), new_bpb, "keep", desc)
+                    log_result("latest", new_bpb, "keep", desc)
                 else:
-                    log_result(get_git_hash(), new_bpb, "discard", desc)
-                    with open(TRAIN_FILE, "w", encoding="utf-8") as f:
-                        f.write(current_code)
+                    print(f"Discarding {new_bpb}")
+                    log_result("latest", new_bpb, "discard", desc)
+                    subprocess.run("git restore train.py", shell=True)
             else:
-                log_result(get_git_hash(), 0.0, "crash", desc)
-                with open(TRAIN_FILE, "w", encoding="utf-8") as f:
-                    f.write(current_code)
+                print("Crash detected.")
+                log_result("latest", 0.0, "crash", desc)
+                subprocess.run("git restore train.py", shell=True)
                     
         except Exception as e:
             print(f"Loop error: {e}")
+            subprocess.run("git restore train.py", shell=True)
             time.sleep(30)
         
-        time.sleep(2)
+        time.sleep(5)
 
 if __name__ == "__main__":
     main()
