@@ -317,7 +317,6 @@ polar_express_coeffs = [
     (2.3465413258596377, -1.7097828382687081, 0.42323551169305323),
 ]
 
-@torch.compile(dynamic=False, fullgraph=True)
 def adamw_step_fused(p, grad, exp_avg, exp_avg_sq, step_t, lr_t, beta1_t, beta2_t, eps_t, wd_t):
     p.mul_(1 - lr_t * wd_t)
     exp_avg.lerp_(grad, 1 - beta1_t)
@@ -328,7 +327,6 @@ def adamw_step_fused(p, grad, exp_avg, exp_avg_sq, step_t, lr_t, beta1_t, beta2_
     step_size = lr_t / bias1
     p.add_(exp_avg / denom, alpha=-step_size)
 
-@torch.compile(dynamic=False, fullgraph=True)
 def muon_step_fused(stacked_grads, stacked_params, momentum_buffer, second_momentum_buffer,
                     momentum_t, lr_t, wd_t, beta2_t, ns_steps, red_dim):
     # Nesterov momentum
@@ -447,12 +445,12 @@ class MuonAdamW(torch.optim.Optimizer):
 # ---------------------------------------------------------------------------
 
 # Model architecture
-ASPECT_RATIO = 32       # Lowered for non-H100 (default was 64)
-HEAD_DIM = 64           # Lowered for non-H100 (default was 128)
+ASPECT_RATIO = 16       # Drastically lowered for CPU
+HEAD_DIM = 32           # Drastically lowered for CPU
 WINDOW_PATTERN = "SSSL" # sliding window pattern: L=full, S=half context
 
 # Optimization
-TOTAL_BATCH_SIZE = 2**16 # Lowered for non-H100 (default was 2**19)
+TOTAL_BATCH_SIZE = 2**13 # 8192 tokens (Drastically lowered for CPU)
 EMBEDDING_LR = 0.6      # learning rate for token embeddings (Adam)
 UNEMBEDDING_LR = 0.004  # learning rate for lm_head (Adam)
 MATRIX_LR = 0.04        # learning rate for matrix parameters (Muon)
@@ -464,8 +462,8 @@ WARMDOWN_RATIO = 0.5    # fraction of time budget for LR warmdown
 FINAL_LR_FRAC = 0.0     # final LR as fraction of initial
 
 # Model size
-DEPTH = 4               # Lowered for non-H100 (default was 8)
-DEVICE_BATCH_SIZE = 16  # Lowered for non-H100 (default was 128)
+DEPTH = 2               # Drastically lowered for CPU
+DEVICE_BATCH_SIZE = 4   # Drastically lowered for CPU
 COMPILE = False         # Disabled by default on Windows to avoid 'cl.exe' headache
 
 # ---------------------------------------------------------------------------
