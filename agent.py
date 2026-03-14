@@ -133,6 +133,7 @@ Output ONLY JSON. Example: {{"MATRIX_LR": 0.041}}
                     print(f"!!! SUCCESS: {new_bpb}")
                     best_bpb = new_bpb
                     subprocess.run(f'git commit -am "Improve to {new_bpb} via {desc}"', shell=True)
+                    subprocess.run('git push mine master', shell=True) # Automatically push to GitHub
                     log_result("latest", new_bpb, "keep", desc)
                 else:
                     print(f"Discarding {new_bpb}")
