@@ -43,3 +43,31 @@ Testing DEVICE_BATCH_SIZE: 4 -> 8
 Running training...
 val_bpb: 2.250013 (best: 2.251074, diff: 0.001061)
 IMPROVED! Committing...
+[autoresearch/mar14 3789687] exp 5: DEVICE_BATCH_SIZE=8
+ 4 files changed, 452 insertions(+), 1 deletion(-)
+ create mode 100644 auto_experiment.py
+ create mode 100644 experiment_log.txt
+ create mode 100755 run_overnight.py
+Current best: 2.250013
+
+--- Experiment 6/100 ---
+Testing MATRIX_LR: 0.04 -> 0.03
+Running training...
+val_bpb: 2.250605 (best: 2.250013, diff: -0.000592)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.250013
+
+--- Experiment 7/100 ---
+Testing WARMUP_RATIO: 0.0 -> 0.05
+Running training...
+val_bpb: 2.262862 (best: 2.250013, diff: -0.012849)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.250013
+
+--- Experiment 8/100 ---
+Testing EMBEDDING_LR: 0.6 -> 0.4
+Running training...
+val_bpb: 2.245303 (best: 2.250013, diff: 0.004710)
+IMPROVED! Committing...
