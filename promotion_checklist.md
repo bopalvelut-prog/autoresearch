@@ -1,59 +1,39 @@
-# Viral Promotion Checklist
+# Viral Promotion Checklist (SWARM EDITION 🐝)
 
 ## Post to Reddit NOW
+- [ ] r/LocalLLaMA (The most active for this)
 - [ ] r/MachineLearning
-- [ ] r/LocalLLaMA  
-- [ ] r/Artificial
+- [ ] r/DistributedComputing
+- [ ] r/SelfHosted
 - [ ] r/Python
-- [ ] r/ArtificialIntelligence
 
 ## Twitter/X
-- [ ] Post the tweet thread (5 tweets)
-- [ ] Reply to @karpathy
+- [ ] Post the `swarm_tweet_thread.sh` thread
+- [ ] Tag @karpathy, @ExoLabs, @ggerganov
 
 ## Hacker News
-- [ ] Submit to news.ycombinator.com
+- [ ] Submit `hn_swarm_post.txt` to news.ycombinator.com (Show HN)
 
 ## LinkedIn
-- [ ] Post about your project
+- [ ] Post `linkedin_swarm_post.txt`
 
 ## Cross-post to other GitHub forks
-- [ ] Comment on original karpathy/autoresearch
-- [ ] Message other fork maintainers
+- [ ] Comment on original karpathy/autoresearch mentioning the swarm feature
 
 ---
 
 ## Ready-to-post content:
 
-### Tweet 1:
-🧵 I made @karpathy's #autoresearch run on a regular Linux CPU - no GPU needed! The autonomous agent improved val_bpb from 2.29 → 2.23 overnight. Here's how:
+### Tweet Thread (see `swarm_tweet_thread.sh`):
+🧵 I've just released the 'LAN Research Swarm' for @karpathy's autoresearch! 🐝 Turn every idle device in your house into a distributed AI research cluster (Mac, Linux, Windows). Here's how:
 
-### Tweet 2:
-1/ First, I forked @karpathy's autoresearch and adapted it for CPU-only. The original needs an H100 GPU 🫠
+### Reddit title:
+I made a "Folding@home" swarm for local LLM research (for @karpathy's autoresearch)
 
-### Tweet 3:
-2/ Key changes: 0.8M params, seq_len 256, automatic device detection
-
-### Tweet 4:
-3/ Let an AI agent loose on hyperparameters overnight. 20+ experiments. Results: 2.7% improvement!
-
-### Tweet 5:
-5/ Try it: `git clone https://github.com/bopalvelut-prog/autoresearch` → `uv sync && uv run train.py` #AI #MachineLearning
+### Reddit body (see `reddit_swarm_post.md`):
+I added a coordinator and worker mode to Andrej Karpathy's autoresearch. Zero-conf auto-discovery + real-time dashboard. Parallelize your hyperparameter search!
 
 ---
 
-### Reddit title:
-Made @karpathy's Autoresearch work on CPU - runs on any computer!
-
-### Reddit body:
-Forked [karpathy/autoresearch](https://github.com/karpathy/autoresearch) and made it work on regular Linux CPU - no GPU needed.
-
-The autonomous agent ran overnight and improved val_bpb from 2.29 → 2.23 (2.7% better)
-
-\`\`\`bash
-git clone https://github.com/bopalvelut-prog/autoresearch
-cd autoresearch
-uv sync
-uv run prepare.py
-uv run train.py
-\`\`\`
+### Key Hook:
+"Zero-config auto-discovery (Exo style) + Real-time Dashboard (prima.cpp style)"

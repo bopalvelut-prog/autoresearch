@@ -1,0 +1,15 @@
+🚀 Just released a "LAN Research Swarm" feature for Andrej Karpathy's autoresearch!
+
+Ever wanted to turn your idle home devices into a distributed AI research cluster?
+
+Inspired by projects like Folding@home, Exo, and prima.cpp, I've built a system where you can:
+
+✅ Run a Coordinator on your main PC (uses a local LLM to generate research ideas)
+✅ Run Workers on any laptop/desktop in your house (auto-discovery via mDNS)
+✅ Watch them all work together on a real-time Dashboard to optimize your LLM training
+
+It's completely open-source and runs on CPU/Apple Silicon.
+
+Check it out here: https://github.com/bopalvelut-prog/autoresearch
+
+#AI #MachineLearning #OpenSource #DistributedComputing #Python #LocalLLM

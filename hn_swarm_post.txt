@@ -1,0 +1,13 @@
+# Show HN: AutoResearch LAN Swarm - Distributed LLM optimization on consumer hardware
+
+I built a feature for Karpathy's `autoresearch` project that turns your home network into a distributed AI research cluster.
+
+It uses mDNS for zero-conf discovery (inspired by Exo) and provides a real-time web dashboard (inspired by prima.cpp).
+
+- **Coordinator**: Python/FastAPI server that uses a local LLM (Ollama) to generate hyperparameters.
+- **Workers**: Python scripts that auto-discover the coordinator and run parallel training jobs on CPU/Mac/Linux.
+- **Goal**: Accelerate the search for optimal training hyperparameters by utilizing idle LAN compute.
+
+The repo is here: https://github.com/bopalvelut-prog/autoresearch
+
+Would love feedback on the architecture, especially regarding worker synchronization and result aggregation!
