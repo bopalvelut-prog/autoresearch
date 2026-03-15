@@ -1,0 +1,45 @@
+# DEV.to Blog Post
+
+**Title:**
+I made @karpathy's Autoresearch work on CPU - no GPU required
+
+**Tags:**
+python, machinelearning, ai, opensource, tutorial
+
+**Body:**
+
+I forked [karpathy/autoresearch](https://github.com/karpathy/autoresearch) and made it work on regular Linux CPU. The original requires an H100 GPU - but it turns out you don't need one!
+
+## What is Autoresearch?
+
+It's an autonomous AI agent that experiments with LLM training hyperparameters. You let it loose overnight, it runs experiments, and you wake up to better models.
+
+## My CPU Version
+
+I adapted it for any computer:
+- Model: 0.8M params (from 50M+)
+- Auto-detects CPU/MPS/CUDA
+- Same structure, simpler config
+
+## Results
+
+The agent ran overnight and improved **val_bpb from 2.29 → 2.23** (2.7% better)
+
+Key improvements it found:
+- DEPTH: 2→3
+- Full attention > sliding window
+- WEIGHT_DECAY: 0.2→0.15
+
+## Try It
+
+```bash
+git clone https://github.com/bopalvelut-prog/autoresearch
+cd autoresearch
+uv sync
+uv run prepare.py
+uv run train.py
+```
+
+Runs in ~5 minutes on any laptop!
+
+Would love feedback from the community. Happy to answer questions! 🚀

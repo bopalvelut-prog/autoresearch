@@ -1,0 +1,22 @@
+# LinkedIn Post
+
+**Post:**
+
+🧵 I just forked @karpathy's Autoresearch project and made it run on a regular CPU - no GPU required!
+
+For those who don't know, Autoresearch is an autonomous AI agent that experiments with LLM training hyperparameters overnight. Pretty cool concept.
+
+The catch? Original needs an H100 GPU.
+
+So I adapted it:
+- Reduced model to 0.8M params
+- Added CPU/MPS/CUDA auto-detection
+- Let the agent loose overnight...
+
+Result? val_bpb improved from 2.29 → 2.23 (2.7% better) 🤖
+
+The best part: it runs on any Linux laptop in ~5 minutes.
+
+Would love feedback from the ML community!
+
+#MachineLearning #AI #OpenSource #Python #LLM

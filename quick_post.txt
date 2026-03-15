@@ -1,0 +1,38 @@
+========================================
+🚀 QUICK POST - COPY & PASTE
+========================================
+
+📌 REDDIT - r/LocalLLaMA
+Title: Made @karpathy's Autoresearch work on CPU - runs on any computer!
+
+Body:
+Forked karpathy/autoresearch and made it work on regular Linux CPU - no GPU needed.
+
+The autonomous agent ran overnight and improved val_bpb from 2.29 → 2.23 (2.7% better)
+
+git clone https://github.com/bopalvelut-prog/autoresearch
+cd autoresearch
+uv sync
+uv run prepare.py
+uv run train.py
+
+Runs in ~5 minutes on any computer!
+
+---
+
+📌 TWITTER/X - Tweet 1 of 5:
+🧵 I made @karpathy's #autoresearch run on a regular Linux CPU - no GPU needed! The autonomous agent improved val_bpb from 2.29 → 2.23 overnight. Here's how:
+
+📌 TWITTER/X - Tweet 2:
+1/ First, I forked @karpathy's autoresearch and adapted it for CPU-only. The original needs an H100 GPU 🫠
+
+📌 TWITTER/X - Tweet 3:
+2/ Key changes: 0.8M params, seq_len 256, automatic device detection
+
+📌 TWITTER/X - Tweet 4:
+3/ Let an AI agent loose on hyperparameters overnight. 20+ experiments. Results: 2.7% improvement!
+
+📌 TWITTER/X - Tweet 5:
+5/ Try it: git clone https://github.com/bopalvelut-prog/autoresearch && cd autoresearch && uv sync && uv run train.py #AI #MachineLearning
+
+========================================

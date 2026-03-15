@@ -1,0 +1,9 @@
+@NetworkChuck 🐙 
+
+I made @karpathy's #autoresearch run on CPU - no GPU needed!
+
+AI agent improved val_bpb 2.29 → 2.23 overnight on my Linux laptop 🔥
+
+Repo: https://github.com/bopalvelut-prog/autoresearch
+
+Perfect for your local AI series! 🚀

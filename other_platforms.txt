@@ -1,0 +1,18 @@
+# Other Platforms to Post
+
+## Already Done:
+- ✅ X/Twitter
+- ✅ Reddit
+- ✅ GitHub/GitLab/Codeberg
+
+## Good Options:
+- **Hacker News** - news.ycombinator.com/submit
+- **LinkedIn** - Post about your project
+- **YouTube** - If you make a video
+- **Facebook Groups** - ML/AI groups
+- **Discord** - ML/AI Discord servers
+
+## Niche Forums:
+- **DEV.to** - dev.to (blog style)
+- **Hashnode** - hashnode.dev
+- **Medium** - medium.com

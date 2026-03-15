@@ -1,0 +1,24 @@
+# Forum Post - Address "Bloat" Concern
+
+**Title:** I made @karpathy's Autoresearch work on CPU - and it's NOT bloated
+
+**Post:**
+
+I saw the comment about CPU support potentially bloating the code - so I decided to prove it doesn't have to!
+
+My fork: https://github.com/bopalvelut-prog/autoresearch
+
+**What I did:**
+- Reduced model from 50M+ → 0.8M params
+- Sequence length 2048 → 256
+- Added automatic device detection (CPU/MPS/CUDA)
+- Total: ~800 lines of code, same structure
+
+**Results:**
+- val_bpb improved: 2.29 → 2.23 (2.7%) 
+- Runs in 5 minutes on any laptop
+- The agent autonomously found better hyperparameters overnight
+
+The original author's concern was valid for GPU code. But for CPU, simple is better - and it still works!
+
+Happy to answer questions.

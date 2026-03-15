@@ -1,0 +1,9 @@
+@MrMrsPotts Yes! That's exactly why I forked it 😊
+
+The original needs an H100 GPU. My fork:
+- Runs on any Linux CPU
+- Reduced model to 0.8M params
+- Auto-detects CPU/MPS/CUDA
+- Works on any laptop!
+
+Check it out: https://github.com/bopalvelut-prog/autoresearch

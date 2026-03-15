@@ -1,0 +1,15 @@
+Title:
+I made @karpathy's Autoresearch work on CPU - no GPU needed
+
+URL:
+https://github.com/bopalvelut-prog/autoresearch
+
+Text (optional):
+Forked karpathy/autoresearch and made it work on regular Linux CPU.
+
+- Runs on any laptop (0.8M params)
+- Autonomous agent improved val_bpb from 2.29 → 2.23 overnight
+- Auto-detects CPU/MPS/CUDA
+- 5 minute training runs
+
+Perfect for experimenting with AI research on the cheap!
