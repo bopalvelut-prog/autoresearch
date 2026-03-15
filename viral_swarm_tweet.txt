@@ -1,15 +1,8 @@
 I've built a "LAN Research Swarm" for @karpathy's autoresearch! 🐝
 
-Turn your idle home devices into a distributed AI research cluster.
-
 - 🔍 Auto-discovery (Exo style)
 - 📊 Real-time Dashboard (prima.cpp style)
-- 🧠 Local LLM Brain generates experiments
 - 💻 Runs on CPU/Mac/Linux
-
-Just run `coordinator.py` on your PC and `worker.py` on laptops.
-
-3x faster hyperparameter search on my network.
 
 Code: github.com/bopalvelut-prog/autoresearch
 

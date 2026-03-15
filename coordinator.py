@@ -2,11 +2,12 @@
 """
 AutoResearch Coordinator - The 'Brain' of the LAN Swarm.
 Mixture of Exo (auto-discovery) and prima.cpp (dashboard/efficiency).
+Optimized with asyncio for better responsiveness.
 """
 
 import os
 import json
-import time
+import asyncio
 import re
 import socket
 import threading
@@ -139,38 +140,48 @@ class ClusterState:
 state = ClusterState()
 
 # --- LLM Brain (Background Task) ---
-def task_generator_loop():
-    """Continuously generate suggestions in the background to avoid blocking API."""
+async def task_generator_loop():
+    """Continuously generate suggestions in the background using asyncio."""
     while True:
-        with state.lock:
-            # Only generate if the queue is small
-            if len(state.pending_tasks) >= 5:
-                time.sleep(10)
-                continue
-        
-        print("[Brain] Consulting LLM for new hyperparameters...")
-        prompt = f"Best BPB: {state.best_bpb}. Suggest ONE change for MATRIX_LR, EMBEDDING_LR, SCALAR_LR, or WEIGHT_DECAY. Output ONLY JSON. Example: {{\"MATRIX_LR\": 0.041}}"
-        new_task = None
         try:
-            full_prompt = f"System: AI Researcher. Output ONLY JSON.\nUser: {prompt}"
-            result = subprocess.run(
-                ['ollama', 'run', MODEL, full_prompt],
-                capture_output=True, text=True, timeout=120, errors='replace'
-            )
-            match = re.search(r"\{.*\}", result.stdout.replace("\n", ""))
-            if match:
-                new_task = json.loads(match.group())
-        except Exception as e:
-            print(f"Ollama error: {e}")
-        
-        if not new_task:
-            new_task = {"MATRIX_LR": 0.04 + (time.time() % 0.01)}
+            with state.lock:
+                if len(state.pending_tasks) >= 5:
+                    await asyncio.sleep(10)
+                    continue
             
-        with state.lock:
-            state.pending_tasks.append(new_task)
-            print(f"[Brain] New task added to queue: {new_task}")
-        
-        time.sleep(2)
+            print("[Brain] Consulting LLM for new hyperparameters...")
+            prompt = f"Best BPB: {state.best_bpb}. Suggest ONE change for MATRIX_LR, EMBEDDING_LR, SCALAR_LR, or WEIGHT_DECAY. Output ONLY JSON. Example: {{\"MATRIX_LR\": 0.041}}"
+            new_task = None
+            
+            # Using asyncio subprocess to prevent blocking the event loop
+            full_prompt = f"System: AI Researcher. Output ONLY JSON.\nUser: {prompt}"
+            process = await asyncio.create_subprocess_exec(
+                'ollama', 'run', MODEL, full_prompt,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=120)
+                output = stdout.decode(errors='replace')
+                match = re.search(r"\{.*\}", output.replace("\n", ""))
+                if match:
+                    new_task = json.loads(match.group())
+            except asyncio.TimeoutError:
+                process.kill()
+                print("[Brain] Ollama timeout")
+            
+            if not new_task:
+                new_task = {"MATRIX_LR": 0.04 + (asyncio.get_event_loop().time() % 0.01)}
+                
+            with state.lock:
+                state.pending_tasks.append(new_task)
+                print(f"[Brain] New task added to queue: {new_task}")
+            
+            await asyncio.sleep(2)
+        except Exception as e:
+            print(f"[Brain] Error: {e}")
+            await asyncio.sleep(10)
 
 # --- mDNS Advertising ---
 def start_mdns():
@@ -198,14 +209,12 @@ class TaskReport(BaseModel):
 @app.get("/task")
 async def get_task(worker_id: str, hostname: str = "unknown"):
     with state.lock:
-        # Register/Update worker
         state.active_workers[worker_id] = {
             "hostname": hostname,
             "last_seen": datetime.now().strftime("%H:%M:%S"),
             "status": "training"
         }
         
-        # Get task from pre-filled queue
         if not state.pending_tasks:
             print(f"Queue empty for {hostname}, providing default.")
             return {"MATRIX_LR": 0.041}
@@ -253,12 +262,15 @@ async def dashboard(request: Request):
         "total_experiments": len(state.experiments)
     })
 
+@app.on_event("startup")
+async def startup_event():
+    # Start the task generator as a background task in the event loop
+    asyncio.create_task(task_generator_loop())
+
 if __name__ == "__main__":
-    # Start task generator thread
-    threading.Thread(target=task_generator_loop, daemon=True).start()
-    
     zc = start_mdns()
     try:
+        # Running via uvicorn directly ensures the asyncio loop is handled correctly
         uvicorn.run(app, host="0.0.0.0", port=PORT)
     finally:
         zc.unregister_all_services()
