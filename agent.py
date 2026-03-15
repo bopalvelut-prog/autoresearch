@@ -1,220 +1,166 @@
 #!/usr/bin/env python3
 """
-Autonomous research agent using Ollama.
-Runs the experiment loop described in program.md
+AutoResearch "Folding Edition" - Idle Background Researcher
+Optimized for low priority and LOW MEMORY consumption.
 """
 
-import subprocess
-import json
 import os
 import sys
-import re
 import time
+import subprocess
+import re
+import json
+import psutil
+import gc
 import requests
-from pathlib import Path
 
-OLLAMA_URL = "http://localhost:11434"
-MODEL = "llama3.2"
-REPO_DIR = Path("/home/ma/autoresearch")
+MODEL = "qwen2.5:0.5b"
+RESULTS_FILE = "results.tsv"
+TRAIN_FILE = "train.py"
+LOG_FILE = "run.log"
 
+# SET PROCESS PRIORITY TO BELOW NORMAL
+p = psutil.Process(os.getpid())
+if os.name == 'nt':
+    p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+else:
+    p.nice(19) 
 
-def ollama_chat(system: str, user: str, temperature: float = 0.7) -> str:
-    """Send a chat request to Ollama."""
-    response = requests.post(
-        f"{OLLAMA_URL}/api/chat",
-        json={
-            "model": MODEL,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            "temperature": temperature,
-        },
-        stream=False,
-    )
-    response.raise_for_status()
-    return response.json()["message"]["content"]
+def unload_model():
+    """Tells Ollama to unload the model to free up RAM."""
+    try:
+        requests.post("http://localhost:11434/api/generate", 
+                      json={"model": MODEL, "keep_alive": 0}, timeout=5)
+    except:
+        pass
 
+def chat(prompt):
+    """Reliable CLI-based chat."""
+    full_prompt = f"System: AI Researcher. Output ONLY JSON.\nUser: {prompt}"
+    try:
+        result = subprocess.run(
+            ['ollama', 'run', MODEL, full_prompt],
+            capture_output=True, text=True, timeout=300,
+            errors='replace'
+        )
+        # Immediately tell ollama we are done for now
+        unload_model()
+        return result.stdout
+    except:
+        return "{}"
 
-def git_commit(commit_msg: str) -> str:
-    """Git add and commit, return short hash."""
-    subprocess.run(["git", "add", "-A"], cwd=REPO_DIR, check=True)
-    subprocess.run(["git", "commit", "-m", commit_msg], cwd=REPO_DIR, check=True)
-    result = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"],
-        cwd=REPO_DIR,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
+def run_command(cmd, timeout=600):
+    """Run training with low priority inherited."""
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout, errors='replace')
+        return result.stdout + result.stderr
+    except:
+        return "ERROR"
 
+def get_git_hash():
+    try:
+        return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], text=True).strip()
+    except:
+        return "latest"
 
-def git_reset() -> None:
-    """Reset to previous commit."""
-    subprocess.run(["git", "reset", "--hard", "HEAD~1"], cwd=REPO_DIR, check=True)
+def parse_results(output):
+    results = {}
+    match = re.search(r"val_bpb:\s+([\d\.]+)", output)
+    if match: results["val_bpb"] = float(match.group(1))
+    return results
 
-
-def run_training() -> dict:
-    """Run training and extract results."""
-    result = subprocess.run(
-        ["uv", "run", "train.py"],
-        cwd=REPO_DIR,
-        capture_output=True,
-        text=True,
-        timeout=600,
-    )
-    output = result.stdout + result.stderr
-
-    # Extract metrics
-    val_bpb = None
-    training_seconds = None
-    peak_vram = None
-
-    for line in output.split("\n"):
-        if line.startswith("val_bpb:"):
-            val_bpb = float(line.split(":")[1].strip())
-        elif line.startswith("training_seconds:"):
-            training_seconds = float(line.split(":")[1].strip())
-        elif line.startswith("peak_vram_mb:"):
-            peak_vram = float(line.split(":")[1].strip())
-
-    return {
-        "val_bpb": val_bpb,
-        "training_seconds": training_seconds,
-        "peak_vram_mb": peak_vram,
-        "output": output,
-        "success": result.returncode == 0 and val_bpb is not None,
-    }
-
-
-def read_tsv() -> list:
-    """Read results.tsv"""
-    tsv_path = REPO_DIR / "results.tsv"
-    if not tsv_path.exists():
-        return []
-    with open(tsv_path) as f:
-        lines = f.readlines()
-    if len(lines) <= 1:
-        return []
-    rows = []
-    for line in lines[1:]:
-        parts = line.strip().split("\t")
-        if len(parts) >= 5:
-            rows.append(
-                {
-                    "commit": parts[0],
-                    "val_bpb": float(parts[1]),
-                    "memory_gb": float(parts[2]),
-                    "status": parts[3],
-                    "description": parts[4],
-                }
-            )
-    return rows
-
-
-def write_tsv(rows: list) -> None:
-    """Write results.tsv"""
-    tsv_path = REPO_DIR / "results.tsv"
-    with open(tsv_path, "w") as f:
-        f.write("commit\tval_bpb\tmemory_gb\tstatus\tdescription\n")
-        for row in rows:
-            f.write(
-                f"{row['commit']}\t{row['val_bpb']}\t{row['memory_gb']}\t{row['status']}\t{row['description']}\n"
-            )
-
-
-def get_last_bpb() -> float:
-    """Get the best (lowest) val_bpb from results."""
-    rows = read_tsv()
-    if not rows:
-        return float("inf")
-    return min(r["val_bpb"] for r in rows if r["status"] == "keep")
-
+def log_result(commit, bpb, status, desc):
+    header = "commit\tval_bpb\tstatus\tdescription\n"
+    file_exists = os.path.exists(RESULTS_FILE)
+    with open(RESULTS_FILE, "a", encoding="utf-8") as f:
+        if not file_exists: f.write(header)
+        f.write(f"{commit}\t{bpb:.6f}\t{status}\t{desc}\n")
 
 def main():
-    print("=" * 60)
-    print("AUTORESEARCH AUTONOMOUS AGENT")
-    print("Using Ollama model:", MODEL)
-    print("=" * 60)
+    print("=== AutoResearch: FOLDING EDITION (Low Memory Mode) ===")
+    
+    # Ensure we start clean
+    subprocess.run("git restore train.py", shell=True)
+    
+    best_bpb = 999.0
+    if os.path.exists(RESULTS_FILE):
+        with open(RESULTS_FILE, "r", encoding="utf-8") as f:
+            for line in f.readlines()[1:]:
+                parts = line.strip().split("\t")
+                if len(parts) >= 3 and parts[2] == "keep":
+                    try:
+                        val = float(parts[1])
+                        if 0 < val < best_bpb: best_bpb = val
+                    except: continue
 
-    # Read program.md for instructions
-    program_md = (REPO_DIR / "program.md").read_text()
-
-    system_prompt = f"""You are an autonomous AI researcher running experiments on LLM training.
-You are working on a CPU-based version of the autoresearch project.
-
-The goal is to improve val_bpb (validation bits per byte) - LOWER IS BETTER.
-
-Current baseline from results.tsv:
-- val_bpb: {get_last_bpb():.6f}
-
-You must follow these rules strictly:
-1. Only modify train.py - never modify prepare.py
-2. Each experiment runs for ~5 minutes max
-3. If val_bpb improves (lower), the commit is kept
-4. If val_bpb gets worse, the commit is discarded (git reset)
-5. Always record results in results.tsv
-6. NEVER ask the human for permission to continue - run autonomously
-7. Be creative but practical - small model on CPU has limited resources
-
-{program_md}
-
-Start by analyzing the current train.py and proposing an experiment. 
-Make one small improvement at a time.
-"""
-
-    # Get initial analysis from agent
-    train_py = (REPO_DIR / "train.py").read_text()
-
-    user_msg = f"""Analyze train.py and propose your first experiment. 
-
-Current train.py (first 100 lines):
-{train_py[:5000]}
-
-What change would you like to make to improve val_bpb?
-Just tell me what you want to change - I'll make the edit and run the experiment.
-"""
+    if best_bpb == 999.0: best_bpb = 2.15525
+    print(f"Current best: {best_bpb}. Starting research loop...")
 
     while True:
         try:
-            response = ollama_chat(system_prompt, user_msg, temperature=0.7)
-            print("\n" + "=" * 40)
-            print("AGENT RESPONSE:")
-            print("=" * 40)
-            print(response)
-            print("=" * 40)
+            gc.collect() # Aggressive cleanup
+            
+            # 1. Suggest change
+            prompt = f"Best BPB: {best_bpb}. Suggest ONE change for MATRIX_LR, EMBEDDING_LR, SCALAR_LR, or WEIGHT_DECAY. Output ONLY JSON. Example: {{\"MATRIX_LR\": 0.041}}"
+            ai_response = chat(prompt)
+            match = re.search(r"\{.*\}", ai_response.replace("\n", ""))
+            if not match: 
+                time.sleep(10)
+                continue
+            
+            changes = json.loads(match.group())
+            
+            # 2. Apply change
+            with open(TRAIN_FILE, "r", encoding="utf-8") as f:
+                code = f.read()
+            
+            desc = ""
+            new_code = code
+            for var, val in changes.items():
+                if var in code:
+                    new_code = re.sub(fr"({var}\s*=\s*)[\d\.\*e\-]+", fr"\g<1>{val}", new_code)
+                    desc += f"{var}={val} "
+            
+            if new_code == code:
+                time.sleep(5)
+                continue
 
-            # Check if agent wants to make a change
-            if (
-                "change" in response.lower()
-                or "modify" in response.lower()
-                or "experiment" in response.lower()
-            ):
-                # For now, just run another training cycle with the agent observing
-                # In a full implementation, we'd parse the specific change
-                pass
-
-            # Ask agent what to do next
-            user_msg = """What would you like to do next? Options:
-1. Make a specific change to train.py (describe the change)
-2. Run training to test current code
-3. Check results and decide to keep/discard
-4. Something else
-
-Be specific about any code changes you'd like to make.
-"""
-
-            # Simple loop - just keep asking
-            time.sleep(1)
-
-        except KeyboardInterrupt:
-            print("\nAgent stopped by user.")
-            break
+            with open(TRAIN_FILE, "w", encoding="utf-8") as f:
+                f.write(new_code)
+            
+            # 3. Run training
+            print(f"[{time.strftime('%H:%M:%S')}] Testing: {desc}")
+            output = run_command("uv run train.py")
+            results = parse_results(output)
+            
+            # 4. Evaluate and Revert if needed
+            if "val_bpb" in results:
+                new_bpb = results["val_bpb"]
+                if new_bpb < best_bpb:
+                    print(f"!!! SUCCESS: {new_bpb}")
+                    best_bpb = new_bpb
+                    subprocess.run(f'git commit -am "Improve to {new_bpb} via {desc}"', shell=True)
+                    subprocess.run('git push mine master', shell=True)
+                    log_result("latest", new_bpb, "keep", desc)
+                else:
+                    print(f"Discarding {new_bpb}")
+                    log_result("latest", new_bpb, "discard", desc)
+                    subprocess.run("git restore train.py", shell=True)
+            else:
+                print("Crash detected.")
+                log_result("latest", 0.0, "crash", desc)
+                subprocess.run("git restore train.py", shell=True)
+            
+            # Cleanup after training run
+            del output
+            gc.collect()
+                    
         except Exception as e:
-            print(f"Error: {e}")
-            break
-
+            print(f"Loop error: {e}")
+            subprocess.run("git restore train.py", shell=True)
+            time.sleep(30)
+        
+        time.sleep(5)
 
 if __name__ == "__main__":
     main()

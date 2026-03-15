@@ -1,6 +1,36 @@
-# autoresearch
+## Universal CPU Edition (Matti A. Pöysti Fork)
 
-![teaser](progress.png)
+This fork has been optimized to run on **any hardware** (CPU, Apple Silicon, or NVIDIA GPU). It removes the requirement for Flash Attention 3 and H100 GPUs, making it perfect for local research on standard computers.
+
+### **Autonomous "Folding Mode"**
+The project now includes an "Always-On" research loop inspired by projects like Folding@home. It runs in the background with **low process priority**, ensuring your computer remains responsive while it searches for optimal AI hyperparameters.
+
+**To start the background researcher:**
+```powershell
+python agent.py
+```
+It will:
+1.  Consult a local **Ollama** model (Qwen 2.5 0.5b) for improvements.
+2.  Automatically modify `train.py`.
+3.  Run a 5-minute training experiment.
+4.  Log all results to `results.tsv`.
+5.  Automatically `git commit` any improvements.
+
+### **Interactive Chat Demos**
+Once you've found the best "record numbers" for your CPU, you can test them with these interactive demos:
+
+- **Small (0.8M Params):** Fast training, simple patterns.
+  ```powershell
+  uv run chat_demo.py
+  ```
+- **Medium (10M Params):** Better language understanding, requires ~20 mins of training.
+  ```powershell
+  uv run chat_demo_medium.py
+  ```
+
+---
+
+## Original Autoresearch README
 
 *One day, frontier AI research used to be done by meat computers in between eating, sleeping, having other fun, and synchronizing once in a while using sound wave interconnect in the ritual of "group meeting". That era is long gone. Research is now entirely the domain of autonomous swarms of AI agents running across compute cluster megastructures in the skies. The agents claim that we are now in the 10,205th generation of the code base, in any case no one could tell if that's right or wrong as the "code" is now a self-modifying binary that has grown beyond human comprehension. This repo is the story of how it all began. -@karpathy, March 2026*.
 

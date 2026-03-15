@@ -447,23 +447,23 @@ class MuonAdamW(torch.optim.Optimizer):
 # Model architecture
 ASPECT_RATIO = 16       # Drastically lowered for CPU
 HEAD_DIM = 32           # Drastically lowered for CPU
-WINDOW_PATTERN = "L"  # sliding window pattern: L=full, S=half context
+WINDOW_PATTERN = "SSSL" # sliding window pattern: L=full, S=half context
 
 # Optimization
 TOTAL_BATCH_SIZE = 2**13 # 8192 tokens (Drastically lowered for CPU)
-EMBEDDING_LR = 0.4  # learning rate for token embeddings (Adam)
-UNEMBEDDING_LR = 0.004  # learning rate for lm_head (Adam)
-MATRIX_LR = 0.04        # learning rate for matrix parameters (Muon)
-SCALAR_LR = 0.5         # learning rate for per-layer scalars (Adam)
-WEIGHT_DECAY = 0.15  # cautious weight decay for Muon
+EMBEDDING_LR = 0.0225      # learning rate for token embeddings (Adam)
+UNEMBEDDING_LR = 0.0225  # learning rate for lm_head (Adam)
+MATRIX_LR = 0.037        # learning rate for matrix parameters (Muon)
+SCALAR_LR = 0.038         # learning rate for per-layer scalars (Adam)
+WEIGHT_DECAY = 0.064      # cautious weight decay for Muon
 ADAM_BETAS = (0.8, 0.95) # Adam beta1, beta2
 WARMUP_RATIO = 0.0      # fraction of time budget for LR warmup
-WARMDOWN_RATIO = 0.4  # fraction of time budget for LR warmdown
+WARMDOWN_RATIO = 0.5    # fraction of time budget for LR warmdown
 FINAL_LR_FRAC = 0.0     # final LR as fraction of initial
 
 # Model size
-DEPTH = 5  # Drastically lowered for CPU
-DEVICE_BATCH_SIZE = 8  # Drastically lowered for CPU
+DEPTH = 2               # Drastically lowered for CPU
+DEVICE_BATCH_SIZE = 4   # Drastically lowered for CPU
 COMPILE = False         # Disabled by default on Windows to avoid 'cl.exe' headache
 
 # ---------------------------------------------------------------------------
@@ -536,7 +536,7 @@ if COMPILE:
     except Exception as e:
         print(f"torch.compile failed, falling back to eager mode. Error: {e}")
 
-train_loader = make_dataloader(tokenizer, DEVICE_BATCH_SIZE, MAX_SEQ_LEN, "train", device=device)
+train_loader = make_dataloader(tokenizer, DEVICE_BATCH_SIZE, MAX_SEQ_LEN, "train", device=device, buffer_size=100)
 x, y, epoch = next(train_loader)  # prefetch first batch
 
 print(f"Time budget: {TIME_BUDGET}s")
