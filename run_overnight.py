@@ -14,28 +14,31 @@ import sys
 REPO_DIR = Path("/home/ma/autoresearch")
 MAX_EXPERIMENTS = 100  # ~8 hours at 5 min/experiment
 
-# Hyperparameter search space
+# Hyperparameter search space - extended
 EXPERIMENTS = [
     # Model size changes
     ("ASPECT_RATIO", "20"),
-    ("DEPTH", "3"),
     ("DEPTH", "4"),
+    ("DEPTH", "5"),
     # Learning rate changes
     ("MATRIX_LR", "0.05"),
-    ("MATRIX_LR", "0.03"),
-    ("EMBEDDING_LR", "0.8"),
-    ("EMBEDDING_LR", "0.4"),
+    ("MATRIX_LR", "0.035"),
+    ("EMBEDDING_LR", "0.5"),
+    ("EMBEDDING_LR", "0.3"),
     # Regularization
     ("WEIGHT_DECAY", "0.15"),
     ("WEIGHT_DECAY", "0.25"),
+    ("WEIGHT_DECAY", "0.1"),
     # Schedules
-    ("WARMUP_RATIO", "0.05"),
-    ("WARMDOWN_RATIO", "0.4"),
+    ("WARMUP_RATIO", "0.03"),
+    ("WARMUP_RATIO", "0.1"),
+    ("WARMDOWN_RATIO", "0.35"),
+    ("WARMDOWN_RATIO", "0.45"),
     ("WARMDOWN_RATIO", "0.6"),
     # Other
-    ("WINDOW_PATTERN", '"L"'),
     ("DEVICE_BATCH_SIZE", "6"),
-    ("DEVICE_BATCH_SIZE", "8"),
+    ("DEVICE_BATCH_SIZE", "10"),
+    ("DEVICE_BATCH_SIZE", "12"),
 ]
 
 

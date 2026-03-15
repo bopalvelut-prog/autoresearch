@@ -1,196 +1,34 @@
 ============================================================
 AUTONOMOUS OVERNIGHT EXPERIMENT LOOP
-Best current val_bpb: 2.251074
+Best current val_bpb: 2.232651
 ============================================================
 Will run up to 100 experiments...
 Press Ctrl+C to stop
 
 
 --- Experiment 1/100 ---
-Testing DEVICE_BATCH_SIZE: 4 -> 8
+Testing DEVICE_BATCH_SIZE: 4 -> 6
 Running training...
-val_bpb: 2.309641 (best: 2.251074, diff: -0.058567)
-No improvement, reverting...
+Training failed!
 Updated 1 path from the index
-Current best: 2.251074
+Current best: 2.232651
 
 --- Experiment 2/100 ---
-Testing MATRIX_LR: 0.04 -> 0.03
+Testing DEVICE_BATCH_SIZE: 4 -> 12
 Running training...
-val_bpb: 2.288926 (best: 2.251074, diff: -0.037852)
-No improvement, reverting...
+Training failed!
 Updated 1 path from the index
-Current best: 2.251074
+Current best: 2.232651
 
 --- Experiment 3/100 ---
-Testing WARMUP_RATIO: 0.0 -> 0.05
+Testing DEVICE_BATCH_SIZE: 4 -> 6
 Running training...
-val_bpb: 2.272164 (best: 2.251074, diff: -0.021090)
-No improvement, reverting...
+Training failed!
 Updated 1 path from the index
-Current best: 2.251074
+Current best: 2.232651
 
 --- Experiment 4/100 ---
-Testing EMBEDDING_LR: 0.6 -> 0.4
-Running training...
-val_bpb: 2.253750 (best: 2.251074, diff: -0.002676)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.251074
-
---- Experiment 5/100 ---
-Testing DEVICE_BATCH_SIZE: 4 -> 8
-Running training...
-val_bpb: 2.250013 (best: 2.251074, diff: 0.001061)
-IMPROVED! Committing...
-[autoresearch/mar14 3789687] exp 5: DEVICE_BATCH_SIZE=8
- 4 files changed, 452 insertions(+), 1 deletion(-)
- create mode 100644 auto_experiment.py
- create mode 100644 experiment_log.txt
- create mode 100755 run_overnight.py
-Current best: 2.250013
-
---- Experiment 6/100 ---
-Testing MATRIX_LR: 0.04 -> 0.03
-Running training...
-val_bpb: 2.250605 (best: 2.250013, diff: -0.000592)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.250013
-
---- Experiment 7/100 ---
-Testing WARMUP_RATIO: 0.0 -> 0.05
-Running training...
-val_bpb: 2.262862 (best: 2.250013, diff: -0.012849)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.250013
-
---- Experiment 8/100 ---
-Testing EMBEDDING_LR: 0.6 -> 0.4
-Running training...
-val_bpb: 2.245303 (best: 2.250013, diff: 0.004710)
-IMPROVED! Committing...
-[autoresearch/mar14 aa44bbc] exp 8: EMBEDDING_LR=0.4
- 2 files changed, 29 insertions(+), 1 deletion(-)
-Current best: 2.245303
-
---- Experiment 9/100 ---
-Testing WEIGHT_DECAY: 0.2 -> 0.25
-Running training...
-val_bpb: 2.245362 (best: 2.245303, diff: -0.000059)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.245303
-
---- Experiment 10/100 ---
-Testing WARMDOWN_RATIO: 0.5 -> 0.4
-Running training...
-val_bpb: 2.239687 (best: 2.245303, diff: 0.005616)
-IMPROVED! Committing...
-[autoresearch/mar14 bf4de26] exp 10: WARMDOWN_RATIO=0.4
- 2 files changed, 18 insertions(+), 1 deletion(-)
-Current best: 2.239687
-
---- Experiment 11/100 ---
-Testing DEPTH: 2 -> 3
-Running training...
-val_bpb: 2.233476 (best: 2.239687, diff: 0.006211)
-IMPROVED! Committing...
-[autoresearch/mar14 eb8ffb7] exp 11: DEPTH=3
- 2 files changed, 10 insertions(+), 1 deletion(-)
-Current best: 2.233476
-
---- Experiment 12/100 ---
-Testing WINDOW_PATTERN: "SSSL" -> "L"
-Running training...
-val_bpb: 2.232651 (best: 2.233476, diff: 0.000825)
-IMPROVED! Committing...
-[autoresearch/mar14 258f90f] exp 12: WINDOW_PATTERN="L"
- 2 files changed, 10 insertions(+), 1 deletion(-)
-Current best: 2.232651
-
---- Experiment 13/100 ---
-Testing DEVICE_BATCH_SIZE: 4 -> 6
-Running training...
-Training failed!
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 14/100 ---
-Testing DEPTH: 2 -> 3
-Running training...
-val_bpb: 2.234134 (best: 2.232651, diff: -0.001483)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 15/100 ---
-Testing WARMDOWN_RATIO: 0.5 -> 0.4
-Running training...
-val_bpb: 2.233319 (best: 2.232651, diff: -0.000668)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 16/100 ---
-Testing WARMDOWN_RATIO: 0.5 -> 0.4
-Running training...
-val_bpb: 2.233364 (best: 2.232651, diff: -0.000713)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 17/100 ---
-Testing WARMUP_RATIO: 0.0 -> 0.05
-Running training...
-val_bpb: 2.260656 (best: 2.232651, diff: -0.028005)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 18/100 ---
 Testing WEIGHT_DECAY: 0.2 -> 0.15
 Running training...
-val_bpb: 2.234219 (best: 2.232651, diff: -0.001568)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 19/100 ---
-Testing WARMDOWN_RATIO: 0.5 -> 0.6
-Running training...
-val_bpb: 2.244874 (best: 2.232651, diff: -0.012223)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 20/100 ---
-Testing EMBEDDING_LR: 0.6 -> 0.8
-Running training...
-val_bpb: 2.240940 (best: 2.232651, diff: -0.008289)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 21/100 ---
-Testing WEIGHT_DECAY: 0.2 -> 0.25
-Running training...
-val_bpb: 2.232768 (best: 2.232651, diff: -0.000117)
-No improvement, reverting...
-Updated 1 path from the index
-Current best: 2.232651
-
---- Experiment 22/100 ---
-Testing DEVICE_BATCH_SIZE: 4 -> 6
-Running training...
-Training failed!
-Updated 1 path from the index
-Current best: 2.232651
-
-Too many consecutive failures, stopping.
-
-============================================================
-Experiment loop complete!
-Final best val_bpb: 2.232651
-============================================================
+val_bpb: 2.225682 (best: 2.232651, diff: 0.006969)
+IMPROVED! Committing...
