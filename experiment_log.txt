@@ -106,3 +106,91 @@ Testing WINDOW_PATTERN: "SSSL" -> "L"
 Running training...
 val_bpb: 2.232651 (best: 2.233476, diff: 0.000825)
 IMPROVED! Committing...
+[autoresearch/mar14 258f90f] exp 12: WINDOW_PATTERN="L"
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+Current best: 2.232651
+
+--- Experiment 13/100 ---
+Testing DEVICE_BATCH_SIZE: 4 -> 6
+Running training...
+Training failed!
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 14/100 ---
+Testing DEPTH: 2 -> 3
+Running training...
+val_bpb: 2.234134 (best: 2.232651, diff: -0.001483)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 15/100 ---
+Testing WARMDOWN_RATIO: 0.5 -> 0.4
+Running training...
+val_bpb: 2.233319 (best: 2.232651, diff: -0.000668)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 16/100 ---
+Testing WARMDOWN_RATIO: 0.5 -> 0.4
+Running training...
+val_bpb: 2.233364 (best: 2.232651, diff: -0.000713)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 17/100 ---
+Testing WARMUP_RATIO: 0.0 -> 0.05
+Running training...
+val_bpb: 2.260656 (best: 2.232651, diff: -0.028005)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 18/100 ---
+Testing WEIGHT_DECAY: 0.2 -> 0.15
+Running training...
+val_bpb: 2.234219 (best: 2.232651, diff: -0.001568)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 19/100 ---
+Testing WARMDOWN_RATIO: 0.5 -> 0.6
+Running training...
+val_bpb: 2.244874 (best: 2.232651, diff: -0.012223)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 20/100 ---
+Testing EMBEDDING_LR: 0.6 -> 0.8
+Running training...
+val_bpb: 2.240940 (best: 2.232651, diff: -0.008289)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 21/100 ---
+Testing WEIGHT_DECAY: 0.2 -> 0.25
+Running training...
+val_bpb: 2.232768 (best: 2.232651, diff: -0.000117)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.232651
+
+--- Experiment 22/100 ---
+Testing DEVICE_BATCH_SIZE: 4 -> 6
+Running training...
+Training failed!
+Updated 1 path from the index
+Current best: 2.232651
+
+Too many consecutive failures, stopping.
+
+============================================================
+Experiment loop complete!
+Final best val_bpb: 2.232651
+============================================================
