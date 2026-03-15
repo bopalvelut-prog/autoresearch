@@ -5,16 +5,30 @@ This fork has been optimized to run on **any hardware** (CPU, Apple Silicon, or 
 ### **Autonomous "Folding Mode"**
 The project now includes an "Always-On" research loop inspired by projects like Folding@home. It runs in the background with **low process priority**, ensuring your computer remains responsive while it searches for optimal AI hyperparameters.
 
-**To start the background researcher:**
+**To start the background researcher (Local):**
 ```powershell
 python agent.py
 ```
-It will:
-1.  Consult a local **Ollama** model (Qwen 2.5 0.5b) for improvements.
-2.  Automatically modify `train.py`.
-3.  Run a 5-minute training experiment.
-4.  Log all results to `results.tsv`.
-5.  Automatically `git commit` any improvements.
+
+### **LAN Research Swarm (New!)**
+Inspired by **Exo** (auto-discovery) and **prima.cpp** (dashboard), you can now run a research cluster across your home network.
+
+1. **Start the Coordinator** (on your main machine):
+   ```bash
+   uv run coordinator.py
+   ```
+   This starts a central server, broadcasts its presence on the LAN, and hosts a **Web Dashboard** at `http://localhost:8000`.
+
+2. **Start Workers** (on any LAN machine):
+   ```bash
+   uv run worker.py
+   ```
+   Workers will automatically find the coordinator using mDNS (zero-config), fetch tasks, and run training experiments in parallel.
+
+3. **Monitor the Swarm**:
+   Open `http://<coordinator-ip>:8000` in your browser to see the real-time "Research Swarm" progress.
+
+---
 
 ### **Interactive Chat Demos**
 Once you've found the best "record numbers" for your CPU, you can test them with these interactive demos:

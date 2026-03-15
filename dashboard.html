@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AutoResearch Swarm</title>
+    <meta http-equiv="refresh" content="5">
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 20px; }
+        .card { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #444; }
+        .best { font-size: 2em; color: #4caf50; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #444; }
+        .status-keep { color: #4caf50; font-weight: bold; }
+        .status-discard { color: #888; }
+        .worker-tag { display: inline-block; background: #444; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <h1>AutoResearch Swarm Dashboard</h1>
+    
+    <div class="card">
+        <h2>Global Best BPB</h2>
+        <div class="best">{{ best_bpb }}</div>
+        <p>Total Experiments: {{ total_experiments }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Active Workers</h2>
+        <table>
+            <tr><th>Hostname</th><th>ID</th><th>Status</th><th>Last Seen</th></tr>
+            {% for id, w in workers.items() %}
+            <tr>
+                <td>{{ w.hostname }}</td>
+                <td><span class="worker-tag">{{ id }}</span></td>
+                <td>{{ w.status }}</td>
+                <td>{{ w.last_seen }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Recent Experiments</h2>
+        <table>
+            <tr><th>Time</th><th>BPB</th><th>Status</th><th>Description</th></tr>
+            {% for e in experiments %}
+            <tr class="status-{{ e.status }}">
+                <td>{{ e.time }}</td>
+                <td>{{ e.bpb }}</td>
+                <td>{{ e.status }}</td>
+                <td>{{ e.desc }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

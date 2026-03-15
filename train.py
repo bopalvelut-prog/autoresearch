@@ -451,11 +451,11 @@ WINDOW_PATTERN = "SSSL" # sliding window pattern: L=full, S=half context
 
 # Optimization
 TOTAL_BATCH_SIZE = 2**13 # 8192 tokens (Drastically lowered for CPU)
-EMBEDDING_LR = 0.0225      # learning rate for token embeddings (Adam)
-UNEMBEDDING_LR = 0.0225  # learning rate for lm_head (Adam)
-MATRIX_LR = 0.037        # learning rate for matrix parameters (Muon)
-SCALAR_LR = 0.038         # learning rate for per-layer scalars (Adam)
-WEIGHT_DECAY = 0.064      # cautious weight decay for Muon
+EMBEDDING_LR = 0.05      # learning rate for token embeddings (Adam)
+UNEMBEDDING_LR = 0.05  # learning rate for lm_head (Adam)
+MATRIX_LR = 0.05        # learning rate for matrix parameters (Muon)
+SCALAR_LR = 0.05         # learning rate for per-layer scalars (Adam)
+WEIGHT_DECAY = 0.05      # cautious weight decay for Muon
 ADAM_BETAS = (0.8, 0.95) # Adam beta1, beta2
 WARMUP_RATIO = 0.0      # fraction of time budget for LR warmup
 WARMDOWN_RATIO = 0.5    # fraction of time budget for LR warmdown
