@@ -462,7 +462,7 @@ WARMDOWN_RATIO = 0.4  # fraction of time budget for LR warmdown
 FINAL_LR_FRAC = 0.0     # final LR as fraction of initial
 
 # Model size
-DEPTH = 3  # Drastically lowered for CPU
+DEPTH = 5  # Drastically lowered for CPU
 DEVICE_BATCH_SIZE = 8  # Drastically lowered for CPU
 COMPILE = False         # Disabled by default on Windows to avoid 'cl.exe' headache
 

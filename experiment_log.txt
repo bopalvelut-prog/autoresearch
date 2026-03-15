@@ -32,3 +32,26 @@ Testing WEIGHT_DECAY: 0.2 -> 0.15
 Running training...
 val_bpb: 2.225682 (best: 2.232651, diff: 0.006969)
 IMPROVED! Committing...
+[autoresearch/mar14 e1f867d] exp 4: WEIGHT_DECAY=0.15
+ 3 files changed, 23 insertions(+), 182 deletions(-)
+Current best: 2.225682
+
+--- Experiment 5/100 ---
+Testing EMBEDDING_LR: 0.6 -> 0.3
+Running training...
+val_bpb: 2.230719 (best: 2.225682, diff: -0.005037)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.225682
+
+--- Experiment 6/100 ---
+Testing WARMUP_RATIO: 0.0 -> 0.03
+Running training...
+val_bpb: 2.252093 (best: 2.225682, diff: -0.026411)
+No improvement, reverting...
+Updated 1 path from the index
+Current best: 2.225682
+
+--- Experiment 7/100 ---
+Testing DEPTH: 2 -> 5
+Running training...
