@@ -21,12 +21,6 @@ dependencies = [
     "jinja2>=3.1.4",
 ]
 
-[tool.uv.sources]
-torch = [
-    { index = "pytorch-cpu" },
-]
-
-[[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
+# For CPU-only PyTorch on Linux, use: uv sync --index https://download.pytorch.org/whl/cpu
+# For Apple Silicon, PyTorch will auto-detect MPS
+# For Windows, install PyTorch manually if needed: pip install torch

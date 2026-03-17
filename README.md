@@ -1,6 +1,6 @@
 ## Universal CPU Edition (Matti A. Pöysti Fork)
 
-This fork has been optimized to run on **any hardware** (CPU, Apple Silicon, or NVIDIA GPU). It removes the requirement for Flash Attention 3 and H100 GPUs, making it perfect for local research on standard computers.
+This fork has been optimized to run on **any hardware** (CPU or Apple Silicon). It removes the requirement for Flash Attention 3 and H100 GPUs, making it perfect for local research on standard computers.
 
 ### **Autonomous "Folding Mode"**
 The project now includes an "Always-On" research loop inspired by projects like Folding@home. It runs in the background with **low process priority**, ensuring your computer remains responsive while it searches for optimal AI hyperparameters.
@@ -44,7 +44,7 @@ Once you've found the best "record numbers" for your CPU, you can test them with
 
 ---
 
-## Original Autoresearch README
+## Notes from Original Autoresearch (Pre-fork)
 
 *One day, frontier AI research used to be done by meat computers in between eating, sleeping, having other fun, and synchronizing once in a while using sound wave interconnect in the ritual of "group meeting". That era is long gone. Research is now entirely the domain of autonomous swarms of AI agents running across compute cluster megastructures in the skies. The agents claim that we are now in the 10,205th generation of the code base, in any case no one could tell if that's right or wrong as the "code" is now a self-modifying binary that has grown beyond human comprehension. This repo is the story of how it all began. -@karpathy, March 2026*.
 
@@ -83,6 +83,15 @@ uv run prepare.py
 uv run train.py
 ```
 
+### Optional: Environment Variables
+
+- `GIT_PUSH_ENABLED=0` - Disable git commit/push (local-only mode)
+- `LLAMA_CPP_ENABLED=1` - Use llama.cpp instead of Ollama
+- `LLAMA_CPP_MODEL_PATH` - Path to llama.cpp model (default: ./models/model.gguf)
+- `LLAMA_SERVER_URL` - URL for llama-server API (default: http://localhost:8080/v1/chat/completions)
+
+For CPU-only PyTorch on Linux: `uv sync --index https://download.pytorch.org/whl/cpu`
+
 ### Run the Autonomous Agent
 
 ```bash
@@ -91,7 +100,7 @@ uv run train.py
 
 The agent will autonomously experiment with hyperparameters to improve val_bpb!
 
-The idea: give an AI agent a small but real LLM training setup and let it experiment autonomously overnight. It modifies the code, trains for 5 minutes, checks if the result improved, keeps or discards, and repeats. You wake up in the morning to a log of experiments and (hopefully) a better model. The training code here is a simplified single-GPU implementation of [nanochat](https://github.com/karpathy/nanochat). The core idea is that you're not touching any of the Python files like you normally would as a researcher. Instead, you are programming the `program.md` Markdown files that provide context to the AI agents and set up your autonomous research org. The default `program.md` in this repo is intentionally kept as a bare bones baseline, though it's obvious how one would iterate on it over time to find the "research org code" that achieves the fastest research progress, how you'd add more agents to the mix, etc. A bit more context on this project is here in this [tweet](https://x.com/karpathy/status/2029701092347630069).
+The idea: give an AI agent a small but real LLM training setup and let it experiment autonomously overnight. It modifies the code, trains for 5 minutes, checks if the result improved, keeps or discards, and repeats. You wake up in the morning to a log of experiments and (hopefully) a better model. The training code here is a simplified implementation of [nanochat](https://github.com/karpathy/nanochat) adapted for CPU execution. Instead, you are programming the `program.md` Markdown files that provide context to the AI agents and set up your autonomous research org. The default `program.md` in this repo is intentionally kept as a bare bones baseline, though it's obvious how one would iterate on it over time to find the "research org code" that achieves the fastest research progress, how you'd add more agents to the mix, etc. A bit more context on this project is here in this [tweet](https://x.com/karpathy/status/2029701092347630069).
 
 ## How it works
 
@@ -107,7 +116,8 @@ If you are new to neural networks, this ["Dummy's Guide"](https://x.com/hooeem/s
 
 ## Quick start
 
-**Requirements:** A single NVIDIA GPU (tested on H100), Python 3.10+, [uv](https://docs.astral.sh/uv/).
+**Requirements:** Python 3.10+, [uv](https://docs.astral.sh/uv/).
+This fork runs efficiently on **CPU and Apple Silicon (MPS)**. No H100 required!
 
 ```bash
 
@@ -149,13 +159,18 @@ pyproject.toml  — dependencies
 
 - **Single file to modify.** The agent only touches `train.py`. This keeps the scope manageable and diffs reviewable.
 - **Fixed time budget.** Training always runs for exactly 5 minutes, regardless of your specific platform. This means you can expect approx 12 experiments/hour and approx 100 experiments while you sleep. There are two upsides of this design decision. First, this makes experiments directly comparable regardless of what the agent changes (model size, batch size, architecture, etc). Second, this means that autoresearch will find the most optimal model for your platform in that time budget. The downside is that your runs (and results) become not comparable to other people running on other compute platforms.
-- **Self-contained.** No external dependencies beyond PyTorch and a few small packages. No distributed training, no complex configs. One GPU, one file, one metric.
+- **Self-contained.** No external dependencies beyond PyTorch and a few small packages. No distributed training, no complex configs. One file, one metric.
 
 ## Platform support
 
-This code currently requires that you have a single NVIDIA GPU. In principle it is quite possible to support CPU, MPS and other platforms but this would also bloat the code. I'm not 100% sure that I want to take this on personally right now. People can reference (or have their agents reference) the full/parent nanochat repository that has wider platform support and shows the various solutions (e.g. a Flash Attention 3 kernels fallback implementation, generic device support, autodetection, etc.), feel free to create forks or discussions for other platforms and I'm happy to link to them here in the README in some new notable forks section or etc.
+This fork is designed for **universal platform support**, running efficiently on:
+-   **CPU** (Linux, Windows, macOS)
+-   **Apple Silicon (MPS)**
+-   **Apple Silicon (MPS)** for Mac users
 
-Seeing as there seems to be a lot of interest in tinkering with autoresearch on much smaller compute platforms than an H100, a few extra words. If you're going to try running autoresearch on smaller computers (Macbooks etc.), I'd recommend one of the forks below. On top of this, here are some recommendations for how to tune the defaults for much smaller models for aspiring forks:
+All previous GPU-specific requirements from the original project have been removed. The focus is on leveraging any available compute power for distributed research.
+
+If you are running on smaller computers (Macbooks etc.), here are some recommendations for how to tune the defaults for much smaller models for aspiring forks:
 
 1. To get half-decent results I'd use a dataset with a lot less entropy, e.g. this [TinyStories dataset](https://huggingface.co/datasets/karpathy/tinystories-gpt4-clean). These are GPT-4 generated short stories. Because the data is a lot narrower in scope, you will see reasonable results with a lot smaller models (if you try to sample from them after training).
 2. You might experiment with decreasing `vocab_size`, e.g. from 8192 down to 4096, 2048, 1024, or even - simply byte-level tokenizer with 256 possibly bytes after utf-8 encoding.
@@ -166,12 +181,6 @@ Seeing as there seems to be a lot of interest in tinkering with autoresearch on 
 7. You'll want to lower `TOTAL_BATCH_SIZE` a lot, but keep it powers of 2, e.g. down to `2**14` (~16K) or so even, hard to tell.
 
 I think these would be the reasonable hyperparameters to play with. Ask your favorite coding agent for help and copy paste them this guide, as well as the full source code.
-
-## Notable forks
-
-- [miolini/autoresearch-macos](https://github.com/miolini/autoresearch-macos) (MacOS)
-- [trevin-creator/autoresearch-mlx](https://github.com/trevin-creator/autoresearch-mlx) (MacOS)
-- [jsegov/autoresearch-win-rtx](https://github.com/jsegov/autoresearch-win-rtx) (Windows)
 
 ## License
 

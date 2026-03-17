@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
 Fully autonomous experiment loop for autoresearch
-Uses Ollama to generate changes, runs experiments automatically
+Uses Ollama or llama.cpp to generate changes, runs experiments automatically
+
+Set LLAMA_CPP_ENABLED=1 to use llama-server instead of Ollama
+Set GIT_PUSH_ENABLED=0 to disable git commit/push
 """
 
+import os
 import subprocess
 import requests
 import time
@@ -11,13 +15,35 @@ import re
 from pathlib import Path
 
 OLLAMA_URL = "http://localhost:11434"
+LLAMA_SERVER_URL = os.environ.get(
+    "LLAMA_SERVER_URL", "http://localhost:8080/v1/chat/completions"
+)
 MODEL = "llama3.2"
 REPO_DIR = Path("/home/ma/autoresearch")
 MAX_EXPERIMENTS = 20
 
+LLAMA_CPP_ENABLED = os.environ.get("LLAMA_CPP_ENABLED", "0") == "1"
+GIT_PUSH_ENABLED = os.environ.get("GIT_PUSH_ENABLED", "1") == "1"
 
-def ollama_chat(system: str, user: str, temperature: float = 0.7) -> str:
-    """Send a chat request to Ollama."""
+
+def llm_chat(system: str, user: str, temperature: float = 0.7) -> str:
+    """Send a chat request to Ollama or llama-server."""
+    if LLAMA_CPP_ENABLED:
+        response = requests.post(
+            LLAMA_SERVER_URL,
+            json={
+                "model": "local-model",
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                "temperature": temperature,
+            },
+            timeout=120,
+        )
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
+
     response = requests.post(
         f"{OLLAMA_URL}/api/chat",
         json={
@@ -125,7 +151,7 @@ What single change would you like to try? Just describe it briefly."""
 
         # Get suggestion from agent
         try:
-            response = ollama_chat(
+            response = llm_chat(
                 system.format(best=get_best_bpb()), user, temperature=0.8
             )
             print(f"Agent suggestion: {response[:200]}")
@@ -147,11 +173,18 @@ What single change would you like to try? Just describe it briefly."""
 
             if new_bpb < old_bpb:
                 print("IMPROVED! Committing...")
-                commit = git_commit(f"experiment {i + 1}: {response[:50]}")
+                if GIT_PUSH_ENABLED:
+                    try:
+                        commit = git_commit(f"experiment {i + 1}: {response[:50]}")
+                    except:
+                        commit = "local"
+                else:
+                    commit = "local"
                 record_result(commit, new_bpb, "keep", response[:50])
             else:
                 print("No improvement, discarding...")
-                subprocess.run(["git", "reset", "--hard", "HEAD~1"], cwd=REPO_DIR)
+                if GIT_PUSH_ENABLED:
+                    subprocess.run(["git", "reset", "--hard", "HEAD~1"], cwd=REPO_DIR)
                 record_result("discarded", new_bpb, "discard", response[:50])
         else:
             print("Training failed!")
