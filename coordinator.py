@@ -10,7 +10,7 @@ import json
 import asyncio
 import re
 import socket
-import threading
+
 from typing import Dict, List, Optional
 from datetime import datetime
 
@@ -24,23 +24,27 @@ import requests
 import subprocess
 
 # --- Config ---
-MODEL = "qwen2.5:0.5b"
+LLAMA_SERVER_URL = "http://localhost:8082/v1/chat/completions"  # Primaclaw
+# MODEL = "qwen2.5:0.5b" # No longer used with llama-server
+MODEL_NAME = "Qwen3-4B-presinq-Q4_K_S.gguf"  # Change this to match your model
 PORT = 8000
 RESULTS_FILE = "cluster_results.tsv"
 TRAIN_FILE = "train.py"
+
 
 def get_lan_ip():
     """Robustly find the LAN IP address."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         # doesn't even have to be reachable
-        s.connect(('10.255.255.255', 1))
+        s.connect(("10.255.255.255", 1))
         IP = s.getsockname()[0]
     except Exception:
-        IP = '127.0.0.1'
+        IP = "127.0.0.1"
     finally:
         s.close()
     return IP
+
 
 app = FastAPI(title="AutoResearch Coordinator")
 
@@ -108,7 +112,8 @@ if not os.path.exists("dashboard.html"):
     with open("dashboard.html", "w") as f:
         f.write(DASHBOARD_HTML)
 
-templates = Jinja2Templates(directory=".") 
+templates = Jinja2Templates(directory=".")
+
 
 # --- State ---
 class ClusterState:
@@ -117,8 +122,8 @@ class ClusterState:
         self.experiments: List[Dict] = []
         self.active_workers: Dict[str, Dict] = {}
         self.pending_tasks: List[Dict] = []
-        self.lock = threading.Lock()
-        
+        self.lock = asyncio.Lock()  # Use asyncio.Lock
+
         # Load existing results if any
         if os.path.exists(RESULTS_FILE):
             try:
@@ -129,59 +134,94 @@ class ClusterState:
                         if len(parts) >= 3:
                             bpb = float(parts[1])
                             self.best_bpb = min(self.best_bpb, bpb)
-                            self.experiments.append({
-                                "time": parts[0],
-                                "bpb": bpb,
-                                "status": parts[2],
-                                "desc": parts[3] if len(parts)>3 else ""
-                            })
-            except: pass
+                            self.experiments.append(
+                                {
+                                    "time": parts[0],
+                                    "bpb": bpb,
+                                    "status": parts[2],
+                                    "desc": parts[3] if len(parts) > 3 else "",
+                                }
+                            )
+            except:
+                pass
+
 
 state = ClusterState()
+
 
 # --- LLM Brain (Background Task) ---
 async def task_generator_loop():
     """Continuously generate suggestions in the background using asyncio."""
     while True:
         try:
-            with state.lock:
+            async with state.lock:
                 if len(state.pending_tasks) >= 5:
                     await asyncio.sleep(10)
                     continue
-            
+
             print("[Brain] Consulting LLM for new hyperparameters...")
-            prompt = f"Best BPB: {state.best_bpb}. Suggest ONE change for MATRIX_LR, EMBEDDING_LR, SCALAR_LR, or WEIGHT_DECAY. Output ONLY JSON. Example: {{\"MATRIX_LR\": 0.041}}"
+            prompt = f'Best BPB: {state.best_bpb}. Suggest ONE change for MATRIX_LR, EMBEDDING_LR, SCALAR_LR, or WEIGHT_DECAY. Output ONLY JSON. Example: {{"MATRIX_LR": 0.041}}'
             new_task = None
-            
-            # Using asyncio subprocess to prevent blocking the event loop
-            full_prompt = f"System: AI Researcher. Output ONLY JSON.\nUser: {prompt}"
-            process = await asyncio.create_subprocess_exec(
-                'ollama', 'run', MODEL, full_prompt,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            
+
+            headers = {"Content-Type": "application/json"}
+            data = {
+                "model": "local-model",  # The model name configured in your llama-server
+                "messages": [
+                    {"role": "system", "content": "AI Researcher. Output ONLY JSON."},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.7,
+                "max_tokens": 500,
+                "stream": False,
+            }
+
             try:
-                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=120)
-                output = stdout.decode(errors='replace')
-                match = re.search(r"\{.*\}", output.replace("\n", ""))
+                response = await asyncio.to_thread(
+                    requests.post,
+                    LLAMA_SERVER_URL,
+                    headers=headers,
+                    json=data,
+                    timeout=60,
+                )
+                response.raise_for_status()  # Raise an exception for HTTP errors
+
+                server_output = response.json()
+                # Assuming the server response is OpenAI chat completion format
+                # Extracting content from the first choice's message
+                full_response_content = server_output["choices"][0]["message"][
+                    "content"
+                ]
+
+                match = re.search(r"\{.*\}", full_response_content.replace("\n", ""))
                 if match:
                     new_task = json.loads(match.group())
-            except asyncio.TimeoutError:
-                process.kill()
-                print("[Brain] Ollama timeout")
-            
+                else:
+                    print(
+                        f"[Brain] No JSON found in llama-server response: {full_response_content}"
+                    )
+            except requests.exceptions.RequestException as e:
+                print(f"[Brain] Llama-server request error: {e}")
+            except json.JSONDecodeError:
+                print(
+                    f"[Brain] Llama-server response was not valid JSON (or content was not parseable): {full_response_content}"
+                )
+            except Exception as e:
+                print(f"[Brain] Error processing llama-server response: {e}")
+
             if not new_task:
-                new_task = {"MATRIX_LR": 0.04 + (asyncio.get_event_loop().time() % 0.01)}
-                
-            with state.lock:
+                new_task = {
+                    "MATRIX_LR": 0.04 + (asyncio.get_event_loop().time() % 0.01)
+                }
+
+            async with state.lock:
                 state.pending_tasks.append(new_task)
                 print(f"[Brain] New task added to queue: {new_task}")
-            
+
             await asyncio.sleep(2)
         except Exception as e:
             print(f"[Brain] Error: {e}")
             await asyncio.sleep(10)
+
 
 # --- mDNS Advertising ---
 def start_mdns():
@@ -199,6 +239,7 @@ def start_mdns():
     zeroconf.register_service(info)
     return zeroconf
 
+
 # --- API Endpoints ---
 class TaskReport(BaseModel):
     worker_id: str
@@ -206,66 +247,89 @@ class TaskReport(BaseModel):
     params: Dict
     hardware: Optional[Dict] = None
 
+
 @app.get("/task")
 async def get_task(worker_id: str, hostname: str = "unknown"):
-    with state.lock:
+    async with state.lock:
         state.active_workers[worker_id] = {
             "hostname": hostname,
             "last_seen": datetime.now().strftime("%H:%M:%S"),
-            "status": "training"
+            "status": "training",
         }
-        
+
         if not state.pending_tasks:
             print(f"Queue empty for {hostname}, providing default.")
             return {"MATRIX_LR": 0.041}
-        
+
         task = state.pending_tasks.pop(0)
         print(f"Assigned task to {hostname}: {task}")
         return task
 
+
 @app.post("/report")
 async def report_result(report: TaskReport):
-    with state.lock:
+    async with state.lock:
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         status = "keep" if report.bpb < state.best_bpb else "discard"
         if report.bpb < state.best_bpb:
             state.best_bpb = report.bpb
             print(f"!!! NEW BEST: {state.best_bpb} from {report.worker_id}")
-        
-        desc = ", ".join([f"{k}={v}" for k,v in report.params.items()])
-        state.experiments.append({
-            "time": ts,
-            "bpb": report.bpb,
-            "status": status,
-            "desc": desc,
-            "worker": report.worker_id
-        })
-        
+
+        desc = ", ".join([f"{k}={v}" for k, v in report.params.items()])
+        state.experiments.append(
+            {
+                "time": ts,
+                "bpb": report.bpb,
+                "status": status,
+                "desc": desc,
+                "worker": report.worker_id,
+                "model": MODEL_NAME,
+            }
+        )
+
         # Log to file
         file_exists = os.path.exists(RESULTS_FILE)
         with open(RESULTS_FILE, "a") as f:
-            if not file_exists: f.write("time\tbpb\tstatus\tdesc\n")
-            f.write(f"{ts}\t{report.bpb:.6f}\t{status}\t{desc}\n")
-            
+            if not file_exists:
+                f.write("time\tbpb\tstatus\tdesc\tmodel\n")
+            f.write(f"{ts}\t{report.bpb:.6f}\t{status}\t{desc}\t{MODEL_NAME}\n")
+
+        # Ensure worker is in active_workers, especially if coordinator restarted
+        if report.worker_id not in state.active_workers:
+            state.active_workers[report.worker_id] = {
+                "hostname": "unknown",  # Worker's hostname might not be available here
+                "last_seen": ts,
+                "status": "re-registered",  # Indicate it was added via report
+            }
+
         state.active_workers[report.worker_id]["status"] = "idle"
-        state.active_workers[report.worker_id]["last_seen"] = datetime.now().strftime("%H:%M:%S")
-        
+        state.active_workers[report.worker_id]["last_seen"] = datetime.now().strftime(
+            "%H:%M:%S"
+        )
+
     return {"status": "ok", "best": state.best_bpb}
+
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
-        "best_bpb": state.best_bpb,
-        "workers": state.active_workers,
-        "experiments": state.experiments[-20:][::-1], # Last 20
-        "total_experiments": len(state.experiments)
-    })
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,
+            "best_bpb": state.best_bpb,
+            "model_name": MODEL_NAME,
+            "workers": state.active_workers,
+            "experiments": state.experiments[-20:][::-1],  # Last 20
+            "total_experiments": len(state.experiments),
+        },
+    )
+
 
 @app.on_event("startup")
 async def startup_event():
     # Start the task generator as a background task in the event loop
     asyncio.create_task(task_generator_loop())
+
 
 if __name__ == "__main__":
     zc = start_mdns()

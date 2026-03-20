@@ -20,12 +20,14 @@ TRAIN_FILE = "train.py"
 LOG_FILE = "run.log"
 
 # Configuration via environment variables:
-# - GIT_PUSH_ENABLED=0    : Disable git commit/push (local-only mode)
-# - LLAMA_CPP_ENABLED=1    : Use llama.cpp instead of Ollama
-# - LLAMA_CPP_MODEL_PATH  : Path to llama.cpp model (default: ./models/model.gguf)
+# - GIT_PUSH_ENABLED=0         : Disable git commit/push (local-only mode)
+# - LLAMA_CPP_ENABLED=1        : Use llama.cpp server instead of Ollama
+# - LLAMA_SERVER_URL           : URL of the llama.cpp server (default: http://localhost:8082)
+# - LLAMA_CPP_MODEL_PATH       : (Optional) Path/name of the model used by llama.cpp server for logging/compliance. Server loads the model.
 
 GIT_PUSH_ENABLED = os.environ.get("GIT_PUSH_ENABLED", "1") == "1"
 LLAMA_CPP_ENABLED = os.environ.get("LLAMA_CPP_ENABLED", "0") == "1"
+LLAMA_SERVER_URL = os.environ.get("LLAMA_SERVER_URL", "http://localhost:8082")
 LLAMA_CPP_MODEL = os.environ.get("LLAMA_CPP_MODEL_PATH", "./models/model.gguf")
 
 # SET PROCESS PRIORITY TO BELOW NORMAL
@@ -55,22 +57,24 @@ def chat(prompt):
     full_prompt = f"System: AI Researcher. Output ONLY JSON.\nUser: {prompt}"
     try:
         if LLAMA_CPP_ENABLED:
-            result = subprocess.run(
-                [
-                    "llama-cli",
-                    "-m",
-                    LLAMA_CPP_MODEL,
-                    "-p",
-                    full_prompt,
-                    "-n",
-                    "256",
-                    "--no-display-prompt",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-            return result.stdout if result.returncode == 0 else "{}"
+            try:
+                response = requests.post(
+                    f"{LLAMA_SERVER_URL}/completion",
+                    json={
+                        "prompt": full_prompt,
+                        "n_predict": 256,
+                        "temperature": 0.7,
+                        "mirostat": 2,
+                        "model": LLAMA_CPP_MODEL # Include model to be compliant with newer llama.cpp servers
+                    },
+                    timeout=300,
+                )
+                response.raise_for_status() # Raise an exception for HTTP errors
+                data = response.json()
+                return data.get("content", "{}")
+            except requests.exceptions.RequestException as e:
+                print(f"Error communicating with llama.cpp server: {e}")
+                return "{}"
         result = subprocess.run(
             ["ollama", "run", MODEL, full_prompt],
             capture_output=True,
@@ -131,7 +135,8 @@ def main():
     print("=== AutoResearch: FOLDING EDITION (Low Memory Mode) ===")
 
     # Ensure we start clean
-    subprocess.run("git restore train.py", shell=True)
+    if GIT_PUSH_ENABLED:
+        subprocess.run("git restore train.py", shell=True)
 
     best_bpb = 999.0
     if os.path.exists(RESULTS_FILE):
@@ -210,19 +215,21 @@ def main():
                 else:
                     print(f"Discarding {new_bpb}")
                     log_result("latest", new_bpb, "discard", desc)
-                    subprocess.run("git restore train.py", shell=True)
-            else:
-                print("Crash detected.")
-                log_result("latest", 0.0, "crash", desc)
-                subprocess.run("git restore train.py", shell=True)
-
+                    if GIT_PUSH_ENABLED:
+                        subprocess.run("git restore train.py", shell=True)
+                    else:
+                    print("Crash detected.")
+                    log_result("latest", 0.0, "crash", desc)
+                    if GIT_PUSH_ENABLED:
+                        subprocess.run("git restore train.py", shell=True)
             # Cleanup after training run
             del output
             gc.collect()
 
         except Exception as e:
             print(f"Loop error: {e}")
-            subprocess.run("git restore train.py", shell=True)
+            if GIT_PUSH_ENABLED:
+                subprocess.run("git restore train.py", shell=True)
             time.sleep(30)
 
         time.sleep(5)

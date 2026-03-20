@@ -98,38 +98,53 @@ def main():
     
     while True:
         try:
-            # 1. Get task
-            resp = requests.get(f"{coordinator_url}/task", params={
-                "worker_id": WORKER_ID,
-                "hostname": HOSTNAME
-            }, timeout=30) # Increased timeout
+            # 1. Get task with retry logic
+            params = None
+            for attempt in range(3): # Retry 3 times
+                try:
+                    resp = requests.get(f"{coordinator_url}/task", params={
+                        "worker_id": WORKER_ID,
+                        "hostname": HOSTNAME
+                    }, timeout=30)
+                    resp.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+                    params = resp.json()
+                    break # Success, break out of retry loop
+                except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
+                    print(f"Attempt {attempt + 1} to get task failed: {e}")
+                    time.sleep(5 * (attempt + 1)) # Exponential backoff
             
-            if resp.status_code != 200:
-                print("Coordinator busy or error. Sleeping...")
-                time.sleep(10)
-                continue
+            if not params:
+                print("Failed to get task after multiple retries. Re-searching for coordinator...")
+                coordinator_url = find_coordinator()
+                if not coordinator_url:
+                    print("Could not find coordinator. Sleeping...")
+                    time.sleep(60) # Longer sleep before next discovery attempt
+                continue # Skip to next loop iteration
                 
-            params = resp.json()
-            
             # 2. Do work
             bpb = run_training(params)
             
-            # 3. Report
+            # 3. Report with retry logic
             if bpb is not None:
                 print(f"Finished! Result: {bpb}")
-                requests.post(f"{coordinator_url}/report", json={
-                    "worker_id": WORKER_ID,
-                    "bpb": bpb,
-                    "params": params
-                }, timeout=30) # Increased timeout
+                for attempt in range(3): # Retry 3 times
+                    try:
+                        resp = requests.post(f"{coordinator_url}/report", json={
+                            "worker_id": WORKER_ID,
+                            "bpb": bpb,
+                            "params": params
+                        }, timeout=30)
+                        resp.raise_for_status()
+                        break # Success
+                    except requests.exceptions.RequestException as e:
+                        print(f"Attempt {attempt + 1} to report result failed: {e}")
+                        time.sleep(5 * (attempt + 1)) # Exponential backoff
             else:
-                print("Training failed or crashed.")
-                # Maybe report a high BPB or error status?
+                print("Training failed or crashed. Skipping report.")
                 
         except Exception as e:
             print(f"Loop error: {e}")
             time.sleep(10)
-            # Try to rediscover if connection lost
             coordinator_url = find_coordinator() or coordinator_url
             
         time.sleep(2)

@@ -1,0 +1,13 @@
+# Reddit: Fixes for Windows/Linux/ollama feedback
+
+Thanks for the great feedback! I've pushed updates addressing all your points:
+
+**1. PyTorch flexibility** - Removed forced CPU-only index. Now works on Windows out of the box. Use `uv sync --index https://download.pytorch.org/whl/cpu` for CPU-only if needed.
+
+**2. Local-only mode** - Set `GIT_PUSH_ENABLED=0` to disable git/ GitHub. Runs completely offline.
+
+**3. llama.cpp support** - Use `LLAMA_CPP_ENABLED=1` to use lightweight llama.cpp instead of Ollama.
+
+Full docs in README. Hope this helps Windows users!
+
+https://github.com/bopalvelut-prog/autoresearch

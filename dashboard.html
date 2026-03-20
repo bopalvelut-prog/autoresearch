@@ -21,6 +21,7 @@
     <div class="card">
         <h2>Global Best BPB</h2>
         <div class="best">{{ best_bpb }}</div>
+        <p>Model: {{ model_name }}</p>
         <p>Total Experiments: {{ total_experiments }}</p>
     </div>
 
@@ -42,12 +43,13 @@
     <div class="card">
         <h2>Recent Experiments</h2>
         <table>
-            <tr><th>Time</th><th>BPB</th><th>Status</th><th>Description</th></tr>
+            <tr><th>Time</th><th>BPB</th><th>Status</th><th>Model</th><th>Description</th></tr>
             {% for e in experiments %}
             <tr class="status-{{ e.status }}">
                 <td>{{ e.time }}</td>
                 <td>{{ e.bpb }}</td>
                 <td>{{ e.status }}</td>
+                <td>{{ e.model }}</td>
                 <td>{{ e.desc }}</td>
             </tr>
             {% endfor %}

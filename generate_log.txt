@@ -1,0 +1,45 @@
+==================================================
+AUTORESEARCH - TEXT GENERATION
+==================================================
+
+Training...
+Step 0 | Loss 9.1663
+Step 20 | Loss 7.4197
+Step 40 | Loss 7.5476
+Step 60 | Loss 7.1615
+Step 80 | Loss 6.9047
+Step 100 | Loss 6.9885
+Step 120 | Loss 6.7975
+Step 140 | Loss 6.6269
+Step 160 | Loss 6.8806
+Step 180 | Loss 6.4770
+Step 200 | Loss 6.7363
+Step 220 | Loss 6.7405
+Step 240 | Loss 6.4207
+Step 260 | Loss 6.5553
+Step 280 | Loss 6.5468
+Step 300 | Loss 6.3234
+Step 320 | Loss 6.3043
+Step 340 | Loss 6.4535
+Step 360 | Loss 6.5171
+
+==================================================
+Generating text...
+==================================================
+
+Prompt: Once upon a time
+Output: Once upon a time for a year. However, Control. "bley. Anpleulation and "y latteruro-underer, or being such as wonderful
+
+Prompt: The quick brown fox
+Output: The quick brown foxies of a smallratic main treatments. For the traditional to their basic in the micro Similar! When the ancient office and you need to chemical to
+
+Prompt: In a distant galaxy
+Output: In a distant galaxy Posts and reverse a regionally. Now to includes a few sera dedhavior providution through the Proviration to more fewional and even
+
+Prompt: The meaning of life is
+Output: The meaning of life is a computing in the sand and Tamiltential
+The Garly back to be found a Tame Free There are made in the 3
+
+Prompt: Hello my name is
+Output: Hello my name is a perfect that you use 2 hours into the high
+Dorn Hamilaniaance is 1ia, and more even empaft is

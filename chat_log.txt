@@ -1,0 +1,53 @@
+Using device: cpu
+==================================================
+AUTORESEARCH - OPTIMIZED CHAT DEMO
+==================================================
+Training with YOUR best hyperparameters:
+  - WEIGHT_DECAY: 0.15
+  - DEPTH: 3
+  - DEVICE_BATCH_SIZE: 8
+==================================================
+
+Training for 10 minutes...
+Step 0 | Loss 9.1577
+Step 10 | Loss 7.8953
+Step 20 | Loss 7.4879
+Step 30 | Loss 7.5826
+Step 40 | Loss 7.5846
+Step 50 | Loss 7.7302
+Step 60 | Loss 7.3581
+Step 70 | Loss 7.3428
+Step 80 | Loss 7.3221
+Step 90 | Loss 7.2836
+Step 100 | Loss 7.1961
+Step 110 | Loss 6.8051
+Step 120 | Loss 6.8891
+Step 130 | Loss 6.8972
+Step 140 | Loss 6.7540
+Step 150 | Loss 6.7813
+Step 160 | Loss 6.9262
+Step 170 | Loss 6.7118
+Step 180 | Loss 6.5840
+Step 190 | Loss 6.7318
+Step 200 | Loss 6.8556
+Step 210 | Loss 6.4968
+Step 220 | Loss 6.8290
+Step 230 | Loss 6.6939
+Step 240 | Loss 6.5120
+Step 250 | Loss 6.4366
+Step 260 | Loss 6.6390
+Step 270 | Loss 6.4963
+Step 280 | Loss 6.6025
+Step 290 | Loss 6.7284
+Step 300 | Loss 6.3719
+Step 310 | Loss 6.6200
+Step 320 | Loss 6.3340
+
+==================================================
+Training Complete! Now chat with your AI!
+==================================================
+
+You: Traceback (most recent call last):
+  File "/home/ma/autoresearch/chat_optimized.py", line 168, in <module>
+    user_input = input("\nYou: ")
+EOFError: EOF when reading a line
