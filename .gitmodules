@@ -1,0 +1,3 @@
+[submodule "e727-local-ai"]
+	path = e727-local-ai
+	url = https://github.com/bopalvelut-prog/e727-local-ai
