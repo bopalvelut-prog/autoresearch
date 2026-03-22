@@ -1,0 +1,27 @@
+name: Weekly Leaderboard
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9 UTC
+  workflow_dispatch:  # Manual trigger
+
+permissions:
+  issues: write
+
+jobs:
+  leaderboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generate leaderboard
+        run: |
+          python leaderboard.py --format md --top 10 > /tmp/leaderboard.md || echo "No results yet" > /tmp/leaderboard.md
+      - name: Create issue
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "Weekly Leaderboard — $(date +'%Y-%m-%d')"
+          content-filepath: /tmp/leaderboard.md
+          labels: leaderboard
