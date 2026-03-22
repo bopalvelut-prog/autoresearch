@@ -1,45 +1,81 @@
-# DEV.to Blog Post
+---
+title: "I built a toolkit that turns e-waste into an AI cluster"
+tags: ai, machinelearning, opensource, tutorial, linux
+---
 
-**Title:**
-I made @karpathy's Autoresearch work on CPU - no GPU required
+I have a 2009 eMachines E727 with a Pentium T4500 that I couldn't throw away. So I made it run AI.
 
-**Tags:**
-python, machinelearning, ai, opensource, tutorial
+## The toolkit
 
-**Body:**
+Three open-source projects that work together:
 
-I forked [karpathy/autoresearch](https://github.com/karpathy/autoresearch) and made it work on regular Linux CPU. The original requires an H100 GPU - but it turns out you don't need one!
+### 1. Primaclaw — Distributed AI from old hardware
 
-## What is Autoresearch?
+Turns old laptops, Raspberry Pis, and phones into an OpenAI-compatible AI cluster.
 
-It's an autonomous AI agent that experiments with LLM training hyperparameters. You let it loose overnight, it runs experiments, and you wake up to better models.
+- Workers auto-discover via UDP broadcast
+- Any OpenAI client can use the cluster (OpenWebUI, SillyTavern, etc.)
+- Dashboard for real-time monitoring
+- Runs on Alpine Linux and even iPhone (via iSH)
 
-## My CPU Version
+```bash
+git clone https://github.com/bopalvelut-prog/e727-local-ai
+cd e727-local-ai && pip install -e .
+python -m src.coordinator  # on your "brain" machine
+python -m src.worker       # on each old machine
+```
 
-I adapted it for any computer:
-- Model: 0.8M params (from 50M+)
-- Auto-detects CPU/MPS/CUDA
-- Same structure, simpler config
+### 2. AutoResearch CPU Edition — Autonomous AI researcher on any computer
 
-## Results
+Fork of karpathy/autoresearch. The original needs an H100 GPU. This runs on your laptop.
 
-The agent ran overnight and improved **val_bpb from 2.29 → 2.23** (2.7% better)
-
-Key improvements it found:
-- DEPTH: 2→3
-- Full attention > sliding window
-- WEIGHT_DECAY: 0.2→0.15
-
-## Try It
+- AI agent suggests hyperparameter changes via local Ollama model
+- Runs 5-minute experiments automatically
+- Commits improvements, discards failures
+- ~12 experiments per hour, ~100 while you sleep
 
 ```bash
 git clone https://github.com/bopalvelut-prog/autoresearch
-cd autoresearch
-uv sync
+cd autoresearch && uv sync
 uv run prepare.py
-uv run train.py
+python agent.py  # let it run overnight
 ```
 
-Runs in ~5 minutes on any laptop!
+The agent improved **val_bpb from 2.29 → 2.23** autonomously.
 
-Would love feedback from the community. Happy to answer questions! 🚀
+### 3. Model Efficiency Comparator — Find the best model for your hardware
+
+Benchmarks Ollama and llama.cpp models by:
+- Token speed (tokens/second)
+- Intelligence (user-rated quality)
+- Model size (smaller = more efficient)
+- Security (prompt injection resistance)
+
+```bash
+python model_efficiency_comparator.py -p "Explain AI" --format html -o report.html
+```
+
+## Real results
+
+| Machine | Year | CPU | Model | Speed |
+|---------|------|-----|-------|-------|
+| eMachines E727 | 2009 | Pentium T4500 | Qwen2.5 1.5B Q4 | 1.7 t/s |
+| iPhone 11 (iSH) | 2019 | A13 (emulated) | Qwen2.5 0.5B | ~0.3 t/s |
+| Acer Swift 3 | 2020 | Ryzen 5 4500U | Qwen2.5 3B Q4 | 0.5 t/s |
+
+These are real, measured numbers. Not impressive by cloud standards, but they're running on hardware worth less than a single month of GPT-4 API usage.
+
+## Why?
+
+- **Privacy**: Everything runs locally. No data leaves your network.
+- **Cost**: Old hardware is free or nearly free.
+- **Learning**: You understand how AI actually works when you see it chugging along at 1.7 tokens per second.
+- **Sustainability**: E-waste gets a second life.
+
+## Links
+
+- [Primaclaw](https://github.com/bopalvelut-prog/e727-local-ai)
+- [AutoResearch CPU](https://github.com/bopalvelut-prog/autoresearch)
+- [Model Efficiency](https://github.com/bopalvelut-prog/model-efficiency)
+
+All MIT licensed. PRs welcome!

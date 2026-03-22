@@ -1,15 +1,16 @@
-Title:
-I made @karpathy's Autoresearch work on CPU - no GPU needed
+I built a toolkit that turns e-waste into an AI cluster (Show HN)
 
-URL:
-https://github.com/bopalvelut-prog/autoresearch
+URL: https://github.com/bopalvelut-prog/e727-local-ai
 
-Text (optional):
-Forked karpathy/autoresearch and made it work on regular Linux CPU.
+I have a 2009 eMachines E727 with a Pentium T4500 that I couldn't throw away. So I made it run AI.
 
-- Runs on any laptop (0.8M params)
-- Autonomous agent improved val_bpb from 2.29 → 2.23 overnight
-- Auto-detects CPU/MPS/CUDA
-- 5 minute training runs
+The project is called Primaclaw — it connects old laptops, Raspberry Pis, and phones into a single OpenAI-compatible API. Workers auto-discover each other via UDP, and any OpenAI client (OpenWebUI, SillyTavern, etc.) can use the cluster.
 
-Perfect for experimenting with AI research on the cheap!
+I also forked karpathy's autoresearch to run on CPU (no GPU needed) and built a model efficiency benchmark that compares Ollama/llama.cpp models by speed, quality, and security (prompt injection resistance).
+
+Tested hardware:
+- eMachines E727 (2009): Qwen2.5 1.5B @ 1.7 t/s
+- iPhone 11 via iSH: Qwen2.5 0.5B @ ~0.3 t/s
+- Acer Swift 3 (2020): Qwen2.5 3B @ 0.5 t/s
+
+All open source, MIT licensed. Works on Alpine Linux and even iSH on iPhone.

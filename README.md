@@ -1,164 +1,107 @@
-## Universal CPU Edition (Matti A. Pöysti Fork)
+[![CI](https://github.com/bopalvelut-prog/autoresearch/actions/workflows/ci.yml/badge.svg)](https://github.com/bopalvelut-prog/autoresearch/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/bopalvelut-prog/autoresearch?style=social)](https://github.com/bopalvelut-prog/autoresearch/stargazers)
 
-This fork has been optimized to run on **any hardware** (CPU, Apple Silicon, or NVIDIA GPU). It removes the requirement for Flash Attention 3 and H100 GPUs, making it perfect for local research on standard computers.
+# AutoResearch — CPU Edition
 
-### **Autonomous "Folding Mode"**
-The project now includes an "Always-On" research loop inspired by projects like Folding@home. It runs in the background with **low process priority**, ensuring your computer remains responsive while it searches for optimal AI hyperparameters.
+**An autonomous AI researcher that runs on any computer. No GPU required.**
 
-**To start the background researcher:**
-```powershell
-python agent.py
+Fork of [karpathy/autoresearch](https://github.com/karpathy/autoresearch). The original needs an H100. This runs on your laptop while you sleep.
+
 ```
-It will:
-1.  Consult a local **Ollama** model (Qwen 2.5 0.5b) for improvements.
-2.  Automatically modify `train.py`.
-3.  Run a 5-minute training experiment.
-4.  Log all results to `results.tsv`.
-5.  Automatically `git commit` any improvements.
+val_bpb: 2.287 (baseline) → 2.226 (after autonomous tuning)
+```
 
-### **Interactive Chat Demos**
-Once you've found the best "record numbers" for your CPU, you can test them with these interactive demos:
+## What it does
 
-- **Small (0.8M Params):** Fast training, simple patterns.
-  ```powershell
-  uv run chat_demo.py
-  ```
-- **Medium (10M Params):** Better language understanding, requires ~20 mins of training.
-  ```powershell
-  uv run chat_demo_medium.py
-  ```
+1. A small local LLM (Qwen 2.5 0.5B via Ollama) suggests hyperparameter changes
+2. `train.py` runs a 5-minute training experiment
+3. If the result improves, it's committed automatically
+4. Repeat — ~12 experiments per hour, ~100 while you sleep
 
+```
+step 00142 (100.0%) | loss: 2.226145 | epoch: 0 | remaining: 0s
 ---
-
-## Original Autoresearch README
-
-*One day, frontier AI research used to be done by meat computers in between eating, sleeping, having other fun, and synchronizing once in a while using sound wave interconnect in the ritual of "group meeting". That era is long gone. Research is now entirely the domain of autonomous swarms of AI agents running across compute cluster megastructures in the skies. The agents claim that we are now in the 10,205th generation of the code base, in any case no one could tell if that's right or wrong as the "code" is now a self-modifying binary that has grown beyond human comprehension. This repo is the story of how it all began. -@karpathy, March 2026*.
-
-## CPU Edition - Run on Any Computer! 🖥️
-
-This fork runs on **Linux CPU** - no GPU required! The autonomous agent improved val_bpb from 2.29 → **2.23** overnight.
-
-```
-- Device: CPU (any computer)
-- Model: 0.8M parameters  
-- Training: 5 minutes per experiment
-- Metric: val_bpb (lower is better)
+val_bpb:          2.226000
+training_seconds: 300.0
+num_params_M:     0.8
 ```
 
-### Results
-
-| Run | val_bpb | Improvement |
-|-----|---------|-------------|
-| Baseline | 2.287 | - |
-| After tuning | 2.226 | 2.7% |
-
-### Quick Start (CPU/Linux)
+## Quick start
 
 ```bash
 # 1. Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2. Install dependencies
-cd autoresearch
-uv sync
+# 2. Clone and install
+git clone https://github.com/bopalvelut-prog/autoresearch.git
+cd autoresearch && uv sync
 
-# 3. Download data & train tokenizer
+# 3. Download data (one-time)
 uv run prepare.py
 
-# 4. Run training
+# 4. Run a single experiment
 uv run train.py
+
+# 5. Let the agent run overnight
+python agent.py
 ```
 
-### Run the Autonomous Agent
-
-```bash
-./run_agent.sh
-```
-
-The agent will autonomously experiment with hyperparameters to improve val_bpb!
-
-The idea: give an AI agent a small but real LLM training setup and let it experiment autonomously overnight. It modifies the code, trains for 5 minutes, checks if the result improved, keeps or discards, and repeats. You wake up in the morning to a log of experiments and (hopefully) a better model. The training code here is a simplified single-GPU implementation of [nanochat](https://github.com/karpathy/nanochat). The core idea is that you're not touching any of the Python files like you normally would as a researcher. Instead, you are programming the `program.md` Markdown files that provide context to the AI agents and set up your autonomous research org. The default `program.md` in this repo is intentionally kept as a bare bones baseline, though it's obvious how one would iterate on it over time to find the "research org code" that achieves the fastest research progress, how you'd add more agents to the mix, etc. A bit more context on this project is here in this [tweet](https://x.com/karpathy/status/2029701092347630069).
+Works on **Linux, macOS, Windows**. Auto-detects CPU / Apple Silicon / NVIDIA GPU.
 
 ## How it works
 
-The repo is deliberately kept small and only really has three files that matter:
+Three files:
 
-- **`prepare.py`** — fixed constants, one-time data prep (downloads training data, trains a BPE tokenizer), and runtime utilities (dataloader, evaluation). Not modified.
-- **`train.py`** — the single file the agent edits. Contains the full GPT model, optimizer (Muon + AdamW), and training loop. Everything is fair game: architecture, hyperparameters, optimizer, batch size, etc. **This file is edited and iterated on by the agent**.
-- **`program.md`** — baseline instructions for one agent. Point your agent here and let it go. **This file is edited and iterated on by the human**.
+| File | Purpose |
+|------|---------|
+| `prepare.py` | Data download, tokenizer, evaluation. Don't touch. |
+| `train.py` | GPT model + optimizer + training loop. The agent edits this. |
+| `program.md` | Instructions for the agent. You edit this. |
+| `agent.py` | Autonomous research loop with Ollama + JSON logging. |
 
-By design, training runs for a **fixed 5-minute time budget** (wall clock, excluding startup/compilation), regardless of the details of your compute. The metric is **val_bpb** (validation bits per byte) — lower is better, and vocab-size-independent so architectural changes are fairly compared.
+All experiments use a **fixed 5-minute time budget**. The metric is **val_bpb** (validation bits per byte) — lower is better.
 
-If you are new to neural networks, this ["Dummy's Guide"](https://x.com/hooeem/status/2030720614752039185) looks pretty good for a lot more context.
+## Results tracking
 
-## Quick start
+Every experiment is logged to:
+- `results.tsv` — flat TSV for quick viewing
+- `results/run_*.json` — structured JSON per run
+- `results/experiments.csv` — aggregate CSV for analysis
 
-**Requirements:** A single NVIDIA GPU (tested on H100), Python 3.10+, [uv](https://docs.astral.sh/uv/).
+View your leaderboard:
 
 ```bash
-
-# 1. Install uv project manager (if you don't already have it)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 2. Install dependencies
-uv sync
-
-# 3. Download data and train tokenizer (one-time, ~2 min)
-uv run prepare.py
-
-# 4. Manually run a single training experiment (~5 min)
-uv run train.py
+uv run leaderboard.py --format md --top 10
+uv run leaderboard.py --format json --export
 ```
 
-If the above commands all work ok, your setup is working and you can go into autonomous research mode.
+## Tuning for your hardware
 
-## Running the agent
+The defaults are conservative (DEPTH=2, 0.8M params). For faster machines:
 
-Simply spin up your Claude/Codex or whatever you want in this repo (and disable all permissions), then you can prompt something like:
-
-```
-Hi have a look at program.md and let's kick off a new experiment! let's do the setup first.
-```
-
-The `program.md` file is essentially a super lightweight "skill".
-
-## Project structure
-
-```
-prepare.py      — constants, data prep + runtime utilities (do not modify)
-train.py        — model, optimizer, training loop (agent modifies this)
-program.md      — agent instructions
-pyproject.toml  — dependencies
+```python
+# In train.py:
+DEPTH = 4              # More layers = better quality, slower
+TOTAL_BATCH_SIZE = 2**15  # 32768 tokens
+DEVICE_BATCH_SIZE = 8
+WINDOW_PATTERN = "L"   # Full attention (faster on beefy CPUs)
 ```
 
-## Design choices
-
-- **Single file to modify.** The agent only touches `train.py`. This keeps the scope manageable and diffs reviewable.
-- **Fixed time budget.** Training always runs for exactly 5 minutes, regardless of your specific platform. This means you can expect approx 12 experiments/hour and approx 100 experiments while you sleep. There are two upsides of this design decision. First, this makes experiments directly comparable regardless of what the agent changes (model size, batch size, architecture, etc). Second, this means that autoresearch will find the most optimal model for your platform in that time budget. The downside is that your runs (and results) become not comparable to other people running on other compute platforms.
-- **Self-contained.** No external dependencies beyond PyTorch and a few small packages. No distributed training, no complex configs. One GPU, one file, one metric.
-
-## Platform support
-
-This code currently requires that you have a single NVIDIA GPU. In principle it is quite possible to support CPU, MPS and other platforms but this would also bloat the code. I'm not 100% sure that I want to take this on personally right now. People can reference (or have their agents reference) the full/parent nanochat repository that has wider platform support and shows the various solutions (e.g. a Flash Attention 3 kernels fallback implementation, generic device support, autodetection, etc.), feel free to create forks or discussions for other platforms and I'm happy to link to them here in the README in some new notable forks section or etc.
-
-Seeing as there seems to be a lot of interest in tinkering with autoresearch on much smaller compute platforms than an H100, a few extra words. If you're going to try running autoresearch on smaller computers (Macbooks etc.), I'd recommend one of the forks below. On top of this, here are some recommendations for how to tune the defaults for much smaller models for aspiring forks:
-
-1. To get half-decent results I'd use a dataset with a lot less entropy, e.g. this [TinyStories dataset](https://huggingface.co/datasets/karpathy/tinystories-gpt4-clean). These are GPT-4 generated short stories. Because the data is a lot narrower in scope, you will see reasonable results with a lot smaller models (if you try to sample from them after training).
-2. You might experiment with decreasing `vocab_size`, e.g. from 8192 down to 4096, 2048, 1024, or even - simply byte-level tokenizer with 256 possibly bytes after utf-8 encoding.
-3. In `prepare.py`, you'll want to lower `MAX_SEQ_LEN` a lot, depending on the computer even down to 256 etc. As you lower `MAX_SEQ_LEN`, you may want to experiment with increasing `DEVICE_BATCH_SIZE` in `train.py` slightly to compensate. The number of tokens per fwd/bwd pass is the product of these two.
-4. Also in `prepare.py`, you'll want to decrease `EVAL_TOKENS` so that your validation loss is evaluated on a lot less data.
-5. In `train.py`, the primary single knob that controls model complexity is the `DEPTH` (default 8, here). A lot of variables are just functions of this, so e.g. lower it down to e.g. 4.
-6. You'll want to most likely use `WINDOW_PATTERN` of just "L", because "SSSL" uses alternating banded attention pattern that may be very inefficient for you. Try it.
-7. You'll want to lower `TOTAL_BATCH_SIZE` a lot, but keep it powers of 2, e.g. down to `2**14` (~16K) or so even, hard to tell.
-
-I think these would be the reasonable hyperparameters to play with. Ask your favorite coding agent for help and copy paste them this guide, as well as the full source code.
+For weaker hardware (phones, old laptops):
+```python
+DEPTH = 1
+TOTAL_BATCH_SIZE = 2**12  # 4096 tokens
+MAX_SEQ_LEN = 128         # In prepare.py
+```
 
 ## Notable forks
 
-- [miolini/autoresearch-macos](https://github.com/miolini/autoresearch-macos) (MacOS)
-- [trevin-creator/autoresearch-mlx](https://github.com/trevin-creator/autoresearch-mlx) (MacOS)
-- [jsegov/autoresearch-win-rtx](https://github.com/jsegov/autoresearch-win-rtx) (Windows)
+| Fork | Platform | Notes |
+|------|----------|-------|
+| [miolini/autoresearch-macos](https://github.com/miolini/autoresearch-macos) | macOS | MPS optimized |
+| [jsegov/autoresearch-win-rtx](https://github.com/jsegov/autoresearch-win-rtx) | Windows | NVIDIA RTX |
 
 ## License
 
-MIT
+MIT. Built on [karpathy/autoresearch](https://github.com/karpathy/autoresearch).
