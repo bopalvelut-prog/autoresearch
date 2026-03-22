@@ -19,6 +19,9 @@ AGENTS.md
 # Experimental code/artifacts
 dev/
 
-# Results file
+# Results data (directory tracked, contents ignored)
+results/*.json
+results/*.csv
+!results/.gitkeep
 results.tsv
 *.log
