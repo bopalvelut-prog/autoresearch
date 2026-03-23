@@ -2,8 +2,13 @@
 """
 AutoResearch "Folding Edition" - Idle Background Researcher
 Optimized for low priority and LOW MEMORY consumption.
+
+Usage:
+    python agent.py              # Use default 0.8M model (train.py)
+    python agent.py --95m        # Use 95M model (train_95m.py)
 """
 
+import argparse
 import os
 import sys
 import time
@@ -16,12 +21,25 @@ import gc
 import requests
 from datetime import datetime
 
+parser = argparse.ArgumentParser(description="AutoResearch Agent")
+parser.add_argument("--95m", action="store_true", help="Use 95M model (train_95m.py)")
+parser.add_argument("--model", type=str, default=None, help="Custom train script path")
+args = parser.parse_args()
+
 MODEL = "qwen2.5-0.5b"
 API_URL = "http://localhost:8080/v1/chat/completions"
 RESULTS_FILE = "results.tsv"
 RESULTS_DIR = "results"
-TRAIN_FILE = "train.py"
+
+if args.model:
+    TRAIN_FILE = args.model
+elif args.__dict__.get("95m"):
+    TRAIN_FILE = "train_95m.py"
+else:
+    TRAIN_FILE = "train.py"
+
 LOG_FILE = "run.log"
+MODEL_SIZE = "95M" if "95m" in TRAIN_FILE else "0.8M"
 
 # SET PROCESS PRIORITY TO BELOW NORMAL
 p = psutil.Process(os.getpid())
@@ -138,9 +156,10 @@ def log_result_json(results, changes, status):
 
 
 def main():
-    print("=== AutoResearch: FOLDING EDITION (Low Memory Mode) ===")
+    print(f"=== AutoResearch: FOLDING EDITION (Low Memory Mode) ===")
+    print(f"Training script: {TRAIN_FILE} ({MODEL_SIZE} model)")
 
-    subprocess.run("git restore train.py", shell=True)
+    subprocess.run(f"git restore {TRAIN_FILE}", shell=True)
 
     best_bpb = 999.0
     if os.path.exists(RESULTS_FILE):
@@ -199,7 +218,7 @@ def main():
 
             # 3. Run training
             print(f"[{time.strftime('%H:%M:%S')}] Testing: {desc}")
-            output = run_command("uv run train.py")
+            output = run_command(f"uv run {TRAIN_FILE}")
             results = parse_results(output)
 
             # 4. Evaluate and Revert if needed
@@ -218,19 +237,19 @@ def main():
                     print(f"Discarding {new_bpb}")
                     log_result_tsv("latest", new_bpb, "discard", desc)
                     log_result_json(results, changes, "discard")
-                    subprocess.run("git restore train.py", shell=True)
+                    subprocess.run(f"git restore {TRAIN_FILE}", shell=True)
             else:
                 print("Crash detected.")
                 log_result_tsv("latest", 0.0, "crash", desc)
                 log_result_json({}, changes, "crash")
-                subprocess.run("git restore train.py", shell=True)
+                subprocess.run(f"git restore {TRAIN_FILE}", shell=True)
 
             del output
             gc.collect()
 
         except Exception as e:
             print(f"Loop error: {e}")
-            subprocess.run("git restore train.py", shell=True)
+            subprocess.run(f"git restore {TRAIN_FILE}", shell=True)
             time.sleep(30)
 
         time.sleep(5)
