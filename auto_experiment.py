@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fully autonomous experiment loop for autoresearch
-Uses Ollama to generate changes, runs experiments automatically
+Uses OpenAI-compatible API (prima.cpp/llama.cpp) to generate changes
 """
 
 import subprocess
@@ -10,16 +10,16 @@ import time
 import re
 from pathlib import Path
 
-OLLAMA_URL = "http://localhost:11434"
-MODEL = "llama3.2"
+API_URL = "http://localhost:8080/v1/chat/completions"
+MODEL = "qwen2.5-0.5b"
 REPO_DIR = Path("/home/ma/autoresearch")
 MAX_EXPERIMENTS = 20
 
 
-def ollama_chat(system: str, user: str, temperature: float = 0.7) -> str:
-    """Send a chat request to Ollama."""
+def openai_chat(system: str, user: str, temperature: float = 0.7) -> str:
+    """Send a chat request via OpenAI-compatible API (prima.cpp/llama.cpp)."""
     response = requests.post(
-        f"{OLLAMA_URL}/api/chat",
+        API_URL,
         json={
             "model": MODEL,
             "messages": [
@@ -27,11 +27,12 @@ def ollama_chat(system: str, user: str, temperature: float = 0.7) -> str:
                 {"role": "user", "content": user},
             ],
             "temperature": temperature,
+            "max_tokens": 512,
         },
         timeout=120,
     )
     response.raise_for_status()
-    return response.json()["message"]["content"]
+    return response.json()["choices"][0]["message"]["content"]
 
 
 def get_best_bpb() -> float:
@@ -125,7 +126,7 @@ What single change would you like to try? Just describe it briefly."""
 
         # Get suggestion from agent
         try:
-            response = ollama_chat(
+            response = openai_chat(
                 system.format(best=get_best_bpb()), user, temperature=0.8
             )
             print(f"Agent suggestion: {response[:200]}")

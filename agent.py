@@ -16,7 +16,8 @@ import gc
 import requests
 from datetime import datetime
 
-MODEL = "qwen2.5:0.5b"
+MODEL = "qwen2.5-0.5b"
+API_URL = "http://localhost:8080/v1/chat/completions"
 RESULTS_FILE = "results.tsv"
 RESULTS_DIR = "results"
 TRAIN_FILE = "train.py"
@@ -24,32 +25,30 @@ LOG_FILE = "run.log"
 
 # SET PROCESS PRIORITY TO BELOW NORMAL
 p = psutil.Process(os.getpid())
-if os.name == 'nt':
+if os.name == "nt":
     p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 else:
     p.nice(19)
 
 
-def unload_model():
-    """Tells Ollama to unload the model to free up RAM."""
-    try:
-        requests.post("http://localhost:11434/api/generate",
-                      json={"model": MODEL, "keep_alive": 0}, timeout=5)
-    except Exception:
-        pass
-
-
 def chat(prompt):
-    """Reliable CLI-based chat."""
-    full_prompt = f"System: AI Researcher. Output ONLY JSON.\nUser: {prompt}"
+    """Chat via OpenAI-compatible API (prima.cpp/llama.cpp server)."""
     try:
-        result = subprocess.run(
-            ['ollama', 'run', MODEL, full_prompt],
-            capture_output=True, text=True, timeout=300,
-            errors='replace'
+        response = requests.post(
+            API_URL,
+            json={
+                "model": MODEL,
+                "messages": [
+                    {"role": "system", "content": "AI Researcher. Output ONLY JSON."},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.7,
+                "max_tokens": 256,
+            },
+            timeout=300,
         )
-        unload_model()
-        return result.stdout
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
     except Exception:
         return "{}"
 
@@ -57,8 +56,14 @@ def chat(prompt):
 def run_command(cmd, timeout=600):
     """Run training with low priority inherited."""
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True,
-                                timeout=timeout, errors='replace')
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            errors="replace",
+        )
         return result.stdout + result.stderr
     except Exception:
         return "ERROR"
@@ -67,7 +72,8 @@ def run_command(cmd, timeout=600):
 def get_git_hash():
     try:
         return subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"], text=True).strip()
+            ["git", "rev-parse", "--short", "HEAD"], text=True
+        ).strip()
     except Exception:
         return "latest"
 
@@ -158,9 +164,11 @@ def main():
             gc.collect()
 
             # 1. Suggest change
-            prompt = (f"Best BPB: {best_bpb}. Suggest ONE change for MATRIX_LR, "
-                      f"EMBEDDING_LR, SCALAR_LR, or WEIGHT_DECAY. "
-                      f"Output ONLY JSON. Example: {{\"MATRIX_LR\": 0.041}}")
+            prompt = (
+                f"Best BPB: {best_bpb}. Suggest ONE change for MATRIX_LR, "
+                f"EMBEDDING_LR, SCALAR_LR, or WEIGHT_DECAY. "
+                f'Output ONLY JSON. Example: {{"MATRIX_LR": 0.041}}'
+            )
             ai_response = chat(prompt)
             match = re.search(r"\{.*\}", ai_response.replace("\n", ""))
             if not match:
@@ -178,8 +186,8 @@ def main():
             for var, val in changes.items():
                 if var in code:
                     new_code = re.sub(
-                        fr"({var}\s*=\s*)[\d\.\*e\-]+",
-                        fr"\g<1>{val}", new_code)
+                        rf"({var}\s*=\s*)[\d\.\*e\-]+", rf"\g<1>{val}", new_code
+                    )
                     desc += f"{var}={val} "
 
             if new_code == code:
@@ -201,9 +209,9 @@ def main():
                     print(f"!!! SUCCESS: {new_bpb}")
                     best_bpb = new_bpb
                     subprocess.run(
-                        f'git commit -am "Improve to {new_bpb} via {desc}"',
-                        shell=True)
-                    subprocess.run('git push mine master', shell=True)
+                        f'git commit -am "Improve to {new_bpb} via {desc}"', shell=True
+                    )
+                    subprocess.run("git push mine master", shell=True)
                     log_result_tsv("latest", new_bpb, "keep", desc)
                     log_result_json(results, changes, "keep")
                 else:
