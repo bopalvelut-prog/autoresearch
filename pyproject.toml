@@ -26,3 +26,6 @@ torch = [
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[tool.ruff]
+ignore = ["E402"]

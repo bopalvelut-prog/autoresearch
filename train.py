@@ -5,7 +5,6 @@ train.py — GPT training with optional --depth and --time-budget CLI flags.
 
 import argparse
 import os
-import sys
 
 # Parse CLI flags BEFORE importing torch (to avoid slow import on wrong config)
 parser = argparse.ArgumentParser(description="AutoResearch training")

@@ -57,8 +57,8 @@ def export_csv(rows, path):
 def print_markdown(rows, top_n=10):
     rows = sorted(rows, key=lambda r: r["val_bpb"])
     rows = rows[:top_n]
-    print(f"| Rank | val_bpb | Status | Description | Commit |")
-    print(f"|------|---------|--------|-------------|--------|")
+    print("| Rank | val_bpb | Status | Description | Commit |")
+    print("|------|---------|--------|-------------|--------|")
     for i, r in enumerate(rows, 1):
         bpb = f"{r['val_bpb']:.6f}"
         status = r.get("status", "?")
@@ -73,7 +73,7 @@ def print_summary(rows):
     crashes = [r for r in rows if r.get("status") == "crash"]
     discards = [r for r in rows if r.get("status") == "discard"]
 
-    print(f"\n=== AutoResearch Leaderboard ===\n")
+    print("\n=== AutoResearch Leaderboard ===\n")
     print(f"Total experiments: {len(all_rows)}")
     print(f"  Kept (improved):   {len(kept)}")
     print(f"  Discarded:         {len(discards)}")

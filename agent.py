@@ -10,7 +10,6 @@ Usage:
 
 import argparse
 import os
-import sys
 import time
 import subprocess
 import re
@@ -156,7 +155,7 @@ def log_result_json(results, changes, status):
 
 
 def main():
-    print(f"=== AutoResearch: FOLDING EDITION (Low Memory Mode) ===")
+    print("=== AutoResearch: FOLDING EDITION (Low Memory Mode) ===")
     print(f"Training script: {TRAIN_FILE} ({MODEL_SIZE} model)")
 
     subprocess.run(f"git restore {TRAIN_FILE}", shell=True)
