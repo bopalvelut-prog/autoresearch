@@ -12,7 +12,7 @@ from pathlib import Path
 
 API_URL = "http://localhost:8080/v1/chat/completions"
 MODEL = "qwen2.5-0.5b"
-REPO_DIR = Path("/home/ma/autoresearch")
+REPO_DIR = Path("/home/m/autoresearch")
 MAX_EXPERIMENTS = 20
 
 
