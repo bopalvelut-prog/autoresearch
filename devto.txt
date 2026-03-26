@@ -29,7 +29,7 @@ python -m src.worker       # on each old machine
 
 Fork of karpathy/autoresearch. The original needs an H100 GPU. This runs on your laptop.
 
-- AI agent suggests hyperparameter changes via local Ollama model
+- AI agent suggests hyperparameter changes via local prima.cpp model
 - Runs 5-minute experiments automatically
 - Commits improvements, discards failures
 - ~12 experiments per hour, ~100 while you sleep
@@ -45,7 +45,7 @@ The agent improved **val_bpb from 2.29 → 2.23** autonomously.
 
 ### 3. Model Efficiency Comparator — Find the best model for your hardware
 
-Benchmarks Ollama and llama.cpp models by:
+Benchmarks prima.cpp and llama.cpp models by:
 - Token speed (tokens/second)
 - Intelligence (user-rated quality)
 - Model size (smaller = more efficient)

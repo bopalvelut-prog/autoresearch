@@ -6,7 +6,7 @@ I have a 2009 eMachines E727 with a Pentium T4500 that I couldn't throw away. So
 
 The project is called Primaclaw — it connects old laptops, Raspberry Pis, and phones into a single OpenAI-compatible API. Workers auto-discover each other via UDP, and any OpenAI client (OpenWebUI, SillyTavern, etc.) can use the cluster.
 
-I also forked karpathy's autoresearch to run on CPU (no GPU needed) and built a model efficiency benchmark that compares Ollama/llama.cpp models by speed, quality, and security (prompt injection resistance).
+I also forked karpathy's autoresearch to run on CPU (no GPU needed) and built a model efficiency benchmark that compares prima.cpp/llama.cpp models by speed, quality, and security (prompt injection resistance).
 
 Tested hardware:
 - eMachines E727 (2009): Qwen2.5 1.5B @ 1.7 t/s

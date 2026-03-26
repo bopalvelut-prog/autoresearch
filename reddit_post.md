@@ -19,7 +19,7 @@ Three open-source projects that work together:
 
 ### 3. [Model Efficiency Comparator](https://github.com/bopalvelut-prog/model-efficiency) — Find the best model for your hardware
 - Benchmarks speed, quality, security
-- Works with Ollama and llama.cpp
+- Works with prima.cpp and llama.cpp
 - Generates HTML/JSON/Markdown reports
 
 ## Real results
