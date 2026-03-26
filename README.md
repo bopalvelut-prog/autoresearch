@@ -14,7 +14,7 @@ val_bpb: 2.287 (baseline) → 2.226 (after autonomous tuning)
 
 ## What it does
 
-1. A small local LLM (Qwen 2.5 0.5B via Ollama) suggests hyperparameter changes
+1. A small local LLM (Qwen 2.5 0.5B via **prima.cpp** server) suggests hyperparameter changes
 2. `train.py` runs a 5-minute training experiment
 3. If the result improves, it's committed automatically
 4. Repeat — ~12 experiments per hour, ~100 while you sleep
@@ -43,11 +43,17 @@ uv run prepare.py
 # 4. Run a single experiment
 uv run train.py
 
-# 5. Let the agent run overnight
+# 5. Start prima.cpp server (recommended)
+prima-cli -m ~/.cache/autoresearch/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+  --port 8080 -c 2048 --threads 4
+
+# 6. Let the agent run overnight
 python agent.py
 ```
 
 Works on **Linux, macOS, Windows**. Auto-detects CPU / Apple Silicon / NVIDIA GPU.
+
+> **Note:** Ollama is avoided — it's bloated (~2GB) and requires root. prima.cpp is lightweight (~150MB) and builds from source.
 
 ## How it works
 
@@ -58,7 +64,7 @@ Three files:
 | `prepare.py` | Data download, tokenizer, evaluation. Don't touch. |
 | `train.py` | GPT model + optimizer + training loop. The agent edits this. |
 | `program.md` | Instructions for the agent. You edit this. |
-| `agent.py` | Autonomous research loop with Ollama + JSON logging. |
+| `agent.py` | Autonomous research loop with prima.cpp + JSON logging. |
 
 All experiments use a **fixed 5-minute time budget**. The metric is **val_bpb** (validation bits per byte) — lower is better.
 
